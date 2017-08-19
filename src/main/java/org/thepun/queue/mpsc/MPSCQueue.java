@@ -1,11 +1,11 @@
 package org.thepun.queue.mpsc;
 
-import org.thepun.queue.SimpleNonBlockingQueue;
+import org.thepun.queue.SimpleQueue;
 
 /**
  * Created by thepun on 19.08.17.
  */
-public class MPSCQueue<T> implements SimpleNonBlockingQueue<T> {
+public class MPSCQueue<T> implements SimpleQueue<T> {
     @Override
     public void addToTail(T element) {
 

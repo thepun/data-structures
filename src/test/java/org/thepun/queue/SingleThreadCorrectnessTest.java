@@ -1,24 +1,33 @@
-package org.thepun.queue.spsc;
+package org.thepun.queue;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.thepun.queue.spsc.SPSCLinkedQueue;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+@RunWith(Parameterized.class)
 public class SingleThreadCorrectnessTest {
 
-    @Test
-    public void emptyQueue() {
-        SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
+    @Parameter
+    private SimpleQueue<Long> queue;
 
+    @Test
+    public void emptyQueue( {
         Long element = queue.removeFromHead();
         assertNull(element);
     }
 
     @Test
     public void addAndGet() {
-        SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
         queue.addToTail(1L);
 
         Long element = queue.removeFromHead();
@@ -28,7 +37,6 @@ public class SingleThreadCorrectnessTest {
 
     @Test
     public void noMoreElements() {
-        SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
         for (int i = 0; i < 1000; i++) {
             queue.addToTail(1L);
         }
@@ -43,7 +51,6 @@ public class SingleThreadCorrectnessTest {
 
     @Test
     public void addManyAndGetMany() {
-        SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
         for (long i = 0; i < 10000000; i++) {
             queue.addToTail(i);
         }
@@ -57,7 +64,6 @@ public class SingleThreadCorrectnessTest {
 
     @Test
     public void addBunchAndGetBunchMultipleTimes() {
-        SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
         for (int l = 0; l < 10000; l++) {
             for (long i = 0; i < 10000; i++) {
                 queue.addToTail(i * l);
@@ -70,4 +76,10 @@ public class SingleThreadCorrectnessTest {
             }
         }
     }
+
+    @Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new SimpleQueue[] {new SPSCLinkedQueue<Long>()})
+    }
+
 }

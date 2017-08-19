@@ -4,13 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class MultipleThreadsTest {
+public class SPSCLinkedQueueTest {
 
     private volatile long result;
 
     @Test
     public void addAndGet() throws InterruptedException {
-        SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
+        SPSCLinkedQueue<Long> queue = new SPSCLinkedQueue<>();
 
         for (int k = 0; k < 100; k++) {
             result = 0;

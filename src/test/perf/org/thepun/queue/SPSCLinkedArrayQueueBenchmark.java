@@ -1,6 +1,6 @@
 package org.thepun.queue;
 
-import org.thepun.queue.spsc.SPSCLinkedArrayQueue;
+import org.thepun.queue.spsc.SPSCLinkedQueue;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -20,7 +20,7 @@ public class SPSCLinkedArrayQueueBenchmark {
 
         System.out.println("Initialized!");
 
-        final SPSCLinkedArrayQueue<Long> queue = new SPSCLinkedArrayQueue<>();
+        final SPSCLinkedQueue<Long> queue = new SPSCLinkedQueue<>();
 
         for (int k = 0; k < 1000; k++) {
             result = 0;

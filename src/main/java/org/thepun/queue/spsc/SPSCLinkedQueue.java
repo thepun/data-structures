@@ -1,11 +1,11 @@
 package org.thepun.queue.spsc;
 
-import org.thepun.queue.SimpleNonBlockingQueue;
+import org.thepun.queue.SimpleQueue;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("unchecked")
-public class SPSCLinkedArrayQueue<T> implements SimpleNonBlockingQueue<T> {
+public class SPSCLinkedQueue<T> implements SimpleQueue<T> {
 
     private static final int BUNCH_SIZE = 256;
     private static final int FIRST_ITEM_INDEX = 1;
@@ -23,7 +23,7 @@ public class SPSCLinkedArrayQueue<T> implements SimpleNonBlockingQueue<T> {
 
     private final AtomicReference<Object[]> emptyChain;
 
-    public SPSCLinkedArrayQueue() {
+    public SPSCLinkedQueue() {
         Object[] firstBunch = new Object[BUNCH_SIZE];
         headBunch = firstBunch;
         tailBunch = firstBunch;

@@ -1,6 +1,6 @@
 package org.thepun.queue;
 
-public interface SimpleNonBlockingQueue<T> {
+public interface SimpleQueue<T> {
 
     /**
      * Add element to the tail of the queue
