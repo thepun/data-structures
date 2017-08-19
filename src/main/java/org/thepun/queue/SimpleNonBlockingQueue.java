@@ -1,4 +1,4 @@
-package org.thepun.queue.spsc;
+package org.thepun.queue;
 
 public interface SimpleNonBlockingQueue<T> {
 

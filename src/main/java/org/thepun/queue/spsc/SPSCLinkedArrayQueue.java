@@ -1,5 +1,7 @@
 package org.thepun.queue.spsc;
 
+import org.thepun.queue.SimpleNonBlockingQueue;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("unchecked")

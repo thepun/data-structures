@@ -1,8 +1,10 @@
-package org.thepun.queue.spsc;
+package org.thepun.queue;
+
+import org.thepun.queue.spsc.SPSCLinkedArrayQueue;
 
 import java.util.concurrent.CountDownLatch;
 
-public class MultipleThreadsPerfTest {
+public class SPSCLinkedArrayQueueBenchmark {
 
     private static final int N = 100_000_000;
 
