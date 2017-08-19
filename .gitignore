@@ -1,0 +1,9 @@
+# java
+*.class
+
+# intellij idea
+*.iml
+.idea
+
+# gradle
+build
