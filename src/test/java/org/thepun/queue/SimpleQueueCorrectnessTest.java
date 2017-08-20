@@ -5,6 +5,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.thepun.queue.spsc.SPSCBlockingLinkedQueue;
 import org.thepun.queue.spsc.SPSCLinkedQueue;
 
 import java.util.Arrays;
@@ -15,13 +16,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 @RunWith(Parameterized.class)
-public class SingleThreadCorrectnessTest {
+public class SimpleQueueCorrectnessTest {
 
     @Parameter
-    private SimpleQueue<Long> queue;
+    public SimpleQueue<Long> queue;
 
     @Test
-    public void emptyQueue( {
+    public void emptyQueue() {
         Long element = queue.removeFromHead();
         assertNull(element);
     }
@@ -79,7 +80,9 @@ public class SingleThreadCorrectnessTest {
 
     @Parameters
     public static Collection<Object[]> data() {
-        return Arrays.asList(new SimpleQueue[] {new SPSCLinkedQueue<Long>()})
+        return Arrays.asList(
+                new Object[]{new SPSCLinkedQueue<Long>()},
+                new Object[]{new SPSCBlockingLinkedQueue<Long>()}
+                /*new Object[]{new MPSCQueue<Long>()}*/);
     }
-
 }
