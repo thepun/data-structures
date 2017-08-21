@@ -4,10 +4,12 @@ import org.thepun.queue.QueueHead;
 import org.thepun.queue.QueueTail;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by thepun on 19.08.17.
  */
+@SuppressWarnings("unchecked")
 public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
 
     private static final int BUNCH_SIZE = 256;
@@ -15,13 +17,15 @@ public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
     private static final int SECOND_ITEM_INDEX = 2;
     private static final int REF_TO_NEXT_INDEX = 0;
     private static final int FIRST_OFFSET_INDEX = BUNCH_SIZE;
+    private static final Object[] EMPTY_ARRAY = new Object[BUNCH_SIZE];
 
 
-    private int nextSubqueueIndex;
+    private int nextProducerIndex;
     private volatile ProducerSubqueue[] producers;
 
     public MPSCLinkedMultiplexer() {
-
+        producers = new ProducerSubqueue[0];
+        nextProducerIndex = 0;
     }
 
     public synchronized QueueTail<T> createProducer() {
@@ -35,62 +39,102 @@ public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
     @Override
     public T removeFromHead() {
         ProducerSubqueue[] localProducers = producers;
-        for (;;) {
-            ProducerSubqueue<T> producer = producers[nextSubqueueIndex % localProducers.length];
 
-            if (producer.headIndex == FIRST_OFFSET_INDEX) {
-                Object[] newHeadBunch = (Object[]) producer.headBunch[REF_TO_NEXT_INDEX];
+        int producerIndex = nextProducerIndex;
+        int producerCount = localProducers.length;
+        int maxProducerIndex = producerIndex + producerCount;
+        for (;;) {
+            if (producerIndex >= maxProducerIndex) {
+                nextProducerIndex = 0;
+                return null;
+            }
+
+            ProducerSubqueue<T> producer = producers[producerIndex % producerCount];
+
+            if (producer.consumerIndex == FIRST_OFFSET_INDEX) {
+                Object[] oldConsumerBunch = producer.consumerBunch;
+
+                Object[] newHeadBunch = (Object[]) oldConsumerBunch[REF_TO_NEXT_INDEX];
                 if (newHeadBunch == null) {
                     continue;
                 }
 
-                producer.headIndex = FIRST_ITEM_INDEX;
-                producer.headBunch = newHeadBunch;
+                producer.consumerIndex = FIRST_ITEM_INDEX;
+                producer.consumerBunch = newHeadBunch;
+
+                System.arraycopy(EMPTY_ARRAY, 0, oldConsumerBunch, 0, BUNCH_SIZE);
+
+                Object[] prevEmptyChainHead = producer.emptyChain.get();
+                if (prevEmptyChainHead == null) {
+                    producer.emptyChain.lazySet(oldConsumerBunch);
+                } else {
+                    oldConsumerBunch[REF_TO_NEXT_INDEX] = prevEmptyChainHead;
+                    if (!producer.emptyChain.compareAndSet(prevEmptyChainHead, oldConsumerBunch)) {
+                        oldConsumerBunch[REF_TO_NEXT_INDEX] = null;
+                        producer.emptyChain.lazySet(oldConsumerBunch);
+                    }
+                }
             }
 
-            Object element = producer.headBunch[producer.headIndex];
+            Object element = producer.consumerBunch[producer.consumerIndex];
             if (element != null) {
-                producer.headIndex++;
+                nextProducerIndex = producerIndex;
+                producer.consumerIndex++;
                 return (T) element;
             }
 
-            nextSubqueueIndex++;
+            producerIndex++;
         }
-
-        return null;
     }
 
 
     private static class ProducerSubqueue<T> implements QueueTail<T> {
 
-        private int headIndex;
-        private Object[] headBunch;
+        private int consumerIndex;
+        private Object[] consumerBunch;
 
-        private int tailIndex;
-        private Object[] tailBunch;
+        private int producerIndex;
+        private Object[] producerBunch;
+        private Object[] producerEmptyChain;
+
+        private final AtomicReference<Object[]> emptyChain;
 
         private ProducerSubqueue() {
             Object[] firstBunch = new Object[BUNCH_SIZE];
-            headBunch = firstBunch;
-            tailBunch = firstBunch;
-            headIndex = FIRST_ITEM_INDEX;
-            tailIndex = FIRST_ITEM_INDEX;
+            consumerBunch = firstBunch;
+            producerBunch = firstBunch;
+            consumerIndex = FIRST_ITEM_INDEX;
+            producerIndex = FIRST_ITEM_INDEX;
+
+            emptyChain = new AtomicReference<>();
         }
 
         @Override
         public void addToTail(T element) {
-            if (tailIndex == FIRST_OFFSET_INDEX) {
-                Object[] newTailBunch = new Object[BUNCH_SIZE];
+            if (producerIndex == FIRST_OFFSET_INDEX) {
+                Object[] newTailBunch;
+
+                if (producerEmptyChain == null) {
+                    Object[] newChain = emptyChain.getAndSet(null);
+                    if (newChain == null) {
+                        newChain = new Object[BUNCH_SIZE];
+                    }
+
+                    producerEmptyChain = newChain;
+                }
+
+                newTailBunch = producerEmptyChain;
+                producerEmptyChain = (Object[]) producerEmptyChain[REF_TO_NEXT_INDEX];
                 newTailBunch[REF_TO_NEXT_INDEX] = null;
                 newTailBunch[FIRST_ITEM_INDEX] = element;
-                tailBunch[REF_TO_NEXT_INDEX] = newTailBunch;
-                tailBunch = newTailBunch;
-                tailIndex = SECOND_ITEM_INDEX;
+                producerBunch[REF_TO_NEXT_INDEX] = newTailBunch;
+                producerBunch = newTailBunch;
+                producerIndex = SECOND_ITEM_INDEX;
 
                 return;
             }
 
-            tailBunch[tailIndex++] = element;
+            producerBunch[producerIndex++] = element;
         }
     }
 }

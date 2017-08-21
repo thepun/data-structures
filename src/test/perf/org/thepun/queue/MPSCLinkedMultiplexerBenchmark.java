@@ -1,36 +1,43 @@
 package org.thepun.queue;
 
-import org.thepun.queue.spsc.SPSCLinkedQueue;
-
 import java.util.concurrent.CountDownLatch;
 
-public class SPSCLinkedArrayQueueBenchmark {
+import org.thepun.queue.mpsc.MPSCLinkedMultiplexer;
 
-    private static final int N = 100_000_000;
+public class MPSCLinkedMultiplexerBenchmark {
 
-    private static volatile long startTime;
-    private static volatile long finishTime;
-    private static volatile long result;
+    private static final int PRODUCERS = 3;
+    private static final int N = 100_000_000 / PRODUCERS;
 
-    public static void main(String[] args) throws InterruptedException {
-        final Long[] values = new Long[N];
+    private static final Long[] values;
+    static {
+        values = new Long[N];
         for (int l = 0; l < N; l++) {
             values[l] = new Long(l);
         }
+    }
 
-        System.out.println("Initialized!");
+    private static volatile long result;
 
-        final SPSCLinkedQueue<Long> queue = new SPSCLinkedQueue<>();
+    public static void main(String[] args) throws InterruptedException {
+        final MPSCLinkedMultiplexer<Long> queue = new MPSCLinkedMultiplexer<>();
+
+        final QueueTail<Long>[] entry = new QueueTail[PRODUCERS];
+        for (int m = 0; m < PRODUCERS; m++) {
+            entry[m] = queue.createProducer();
+        }
 
         for (int k = 0; k < 1000; k++) {
-            result = 0;
-            startTime = 0;
-            finishTime = 0;
-
             final CountDownLatch START = new CountDownLatch(1);
-            final CountDownLatch FINISH = new CountDownLatch(2);
+            final CountDownLatch FINISH = new CountDownLatch(1 + PRODUCERS);
 
             class ProducerThraed extends Thread {
+                private final QueueTail<Long> producer;
+
+                ProducerThraed(QueueTail<Long> producer) {
+                    this.producer = producer;
+                }
+
                 @Override
                 public void run() {
                     try {
@@ -39,10 +46,8 @@ public class SPSCLinkedArrayQueueBenchmark {
                         return;
                     }
 
-                    startTime = System.nanoTime();
-
                     for (int i = 0; i < N; i++) {
-                        queue.addToTail(values[i]);
+                        producer.addToTail(values[i]);
                     }
 
                     FINISH.countDown();
@@ -61,7 +66,7 @@ public class SPSCLinkedArrayQueueBenchmark {
                     Long value;
 
                     long tempValue = 0;
-                    for (int i = 0; i < N; i++) {
+                    for (int i = 0; i < N * PRODUCERS; i++) {
                         do {
                             value = queue.removeFromHead();
                         } while (value == null);
@@ -69,23 +74,26 @@ public class SPSCLinkedArrayQueueBenchmark {
                         tempValue += value.longValue();
                     }
 
-                    finishTime = System.nanoTime();
-
-                    result += tempValue;
-
+                    result = tempValue;
                     FINISH.countDown();
                 }
             }
 
-            ProducerThraed producerThraed = new ProducerThraed();
+            ProducerThraed[] producers = new ProducerThraed[PRODUCERS];
+            for (int i = 0; i < PRODUCERS; i++) {
+                producers[i] = new ProducerThraed(entry[i]);
+                producers[i].start();
+            }
+
             ConsumerThread consumerThread = new ConsumerThread();
-            producerThraed.start();
             consumerThread.start();
 
             System.out.println("Started!");
 
+            long startTime = System.nanoTime();
             START.countDown();
             FINISH.await();
+            long finishTime = System.nanoTime();
 
             System.out.println("Time: " + ((finishTime - startTime) / 1_000_000) + "ms");
             System.out.println("Final result: " + result);

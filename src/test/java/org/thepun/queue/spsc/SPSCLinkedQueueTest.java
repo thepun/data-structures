@@ -3,6 +3,7 @@ package org.thepun.queue.spsc;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.thepun.queue.TestUtils;
 
 public class SPSCLinkedQueueTest {
 
@@ -18,7 +19,7 @@ public class SPSCLinkedQueueTest {
             class ProducerThraed extends Thread {
                 @Override
                 public void run() {
-                    for (long i = 0; i < 1000000000; i++) {
+                    for (long i = 0; i < 10_000_000; i++) {
                         queue.addToTail(i);
                     }
                 }
@@ -28,15 +29,11 @@ public class SPSCLinkedQueueTest {
                 @Override
                 public void run() {
                     long tempValue = 0;
-                    for (long i = 0; i < 1000000000; i++) {
+                    for (long i = 0; i < 10_000_000; i++) {
                         Long value;
                         do {
                             value = queue.removeFromHead();
                         } while (value == null);
-
-                        /*if (i != value) {
-                            Object o = null;
-                        }*/
 
                         assertEquals(i, (long) value);
 
@@ -55,10 +52,9 @@ public class SPSCLinkedQueueTest {
             producerThraed.join();
             consumerThread.join();
 
-            assertEquals(49999995000000L, result);
+            assertEquals(TestUtils.calcTotal(10_000_000, 1), result);
 
-            System.out.println("Iteration done!");
+            System.out.println("Iteration done! " + (k + 1) + " of 100");
         }
     }
-
 }
