@@ -1,5 +1,6 @@
 package org.thepun.queue;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -15,6 +16,6 @@ public interface QueueBlockingHead<T> extends QueueHead<T> {
      * @return element
      * @throws TimeoutException
      */
-    T removeFromHead(long timeout) throws TimeoutException;
+    T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException;
 
 }
