@@ -19,7 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 @RunWith(Parameterized.class)
-public class QueueCorrectnessTest {
+public class OrderCorrectnessTest {
 
     @Parameter(0)
     public QueueTail<Long> tail;

@@ -12,6 +12,7 @@ public class SPSCLinkedQueue<T> implements SimpleQueue<T> {
     private static final int SECOND_ITEM_INDEX = 2;
     private static final int REF_TO_NEXT_INDEX = 0;
     private static final int FIRST_OFFSET_INDEX = BUNCH_SIZE;
+
     private static final Object[] EMPTY_ARRAY = new Object[BUNCH_SIZE];
 
 

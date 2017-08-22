@@ -1,5 +1,6 @@
 package org.thepun.queue.mpsc;
 
+import org.thepun.queue.Multiplexer;
 import org.thepun.queue.QueueHead;
 import org.thepun.queue.QueueTail;
 
@@ -10,35 +11,77 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by thepun on 19.08.17.
  */
 @SuppressWarnings("unchecked")
-public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
+public class MPSCLinkedMultiplexer<T> implements Multiplexer<T> {
 
     private static final int BUNCH_SIZE = 256;
     private static final int FIRST_ITEM_INDEX = 1;
     private static final int SECOND_ITEM_INDEX = 2;
     private static final int REF_TO_NEXT_INDEX = 0;
     private static final int FIRST_OFFSET_INDEX = BUNCH_SIZE;
+
     private static final Object[] EMPTY_ARRAY = new Object[BUNCH_SIZE];
 
 
     private int nextProducerIndex;
-    private volatile ProducerSubqueue[] producers;
+
+    private final AtomicReference<ProducerSubqueue[]> producers;
 
     public MPSCLinkedMultiplexer() {
-        producers = new ProducerSubqueue[0];
+        producers = new AtomicReference<>(new ProducerSubqueue[0]);
         nextProducerIndex = 0;
     }
 
-    public synchronized QueueTail<T> createProducer() {
-        ProducerSubqueue<T> producer = new ProducerSubqueue<>();
-        int length = producers.length;
-        producers = Arrays.copyOf(producers, length + 1);
-        producers[length] = producer;
+    @Override
+    public QueueTail<T> createProducer() {
+        ProducerSubqueue[] oldProducers = producers.get();
+        ProducerSubqueue[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
+        ProducerSubqueue<T> producer = new ProducerSubqueue<>(this);
+        newProducers[oldProducers.length] = producer;
+        producers.lazySet(newProducers);
         return producer;
     }
 
     @Override
+    public void destroyProducer(QueueTail<T> producer) {
+        if (!(producer instanceof ProducerSubqueue)) {
+            throw new IllegalArgumentException("Wrong producer");
+        }
+
+        ProducerSubqueue producerSubqueue = (ProducerSubqueue) producer;
+        if (producerSubqueue.parent != this) {
+            throw new IllegalArgumentException("Producer from another multiplexer");
+        }
+
+        ProducerSubqueue[] newProducers;
+        ProducerSubqueue[] oldProducers;
+
+        do {
+            oldProducers = producers.get();
+            int index = -1;
+            for (int i = 0; i < oldProducers.length; i++) {
+                if (oldProducers[i] == producer) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1) {
+                throw new IllegalArgumentException("Producer not found");
+            }
+
+            newProducers = new ProducerSubqueue[oldProducers.length - 1];
+            for (int i = 0; i < index; i++) {
+                newProducers[i] = oldProducers[i];
+            }
+            for (int i = index + 1; i < oldProducers.length; i++) {
+                newProducers[i - 1] = oldProducers[i];
+            }
+        } while (!producers.compareAndSet(oldProducers, newProducers));
+    }
+
+    @Override
     public T removeFromHead() {
-        ProducerSubqueue[] localProducers = producers;
+        ProducerSubqueue[] localProducers = producers.get();
 
         int producerIndex = nextProducerIndex;
         int producerCount = localProducers.length;
@@ -49,7 +92,7 @@ public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
                 return null;
             }
 
-            ProducerSubqueue<T> producer = producers[producerIndex % producerCount];
+            ProducerSubqueue<T> producer = localProducers[producerIndex % producerCount];
 
             if (producer.consumerIndex == FIRST_OFFSET_INDEX) {
                 Object[] oldConsumerBunch = producer.consumerBunch;
@@ -88,7 +131,9 @@ public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
     }
 
 
-    private static class ProducerSubqueue<T> implements QueueTail<T> {
+    private static final class ProducerSubqueue<T> implements QueueTail<T> {
+
+        private final MPSCLinkedMultiplexer<T> parent;
 
         private int consumerIndex;
         private Object[] consumerBunch;
@@ -99,7 +144,9 @@ public class MPSCLinkedMultiplexer<T> implements QueueHead<T> {
 
         private final AtomicReference<Object[]> emptyChain;
 
-        private ProducerSubqueue() {
+        private ProducerSubqueue(MPSCLinkedMultiplexer<T> parent) {
+            this.parent = parent;
+
             Object[] firstBunch = new Object[BUNCH_SIZE];
             consumerBunch = firstBunch;
             producerBunch = firstBunch;
