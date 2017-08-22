@@ -1,8 +1,8 @@
 package org.thepun.queue;
 
-import org.thepun.queue.spsc.SPSCLinkedQueue;
+import org.thepun.queue.spsc.SPSCSplittedLinkedQueue;
 
-public class SPSCLinkedQueueBenchmark {
+public class SPSCSplittedLinkedQueueBenchmark {
 
     static final int N = 100_000_000;
 
@@ -15,39 +15,39 @@ public class SPSCLinkedQueueBenchmark {
 
         System.out.println("Initialized!");
 
-        SPSCLinkedQueue<Long> queue;
+        SPSCSplittedLinkedQueue<Long> queue;
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
-        queue = new SPSCLinkedQueue<>();
+        queue = new SPSCSplittedLinkedQueue<>();
         BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
 
     }
