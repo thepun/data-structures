@@ -29,5 +29,6 @@ idea {
         downloadSources = true
         outputDir = file('build/idea')
         testOutputDir = file('build/idea_test')
+        excludeDirs += file('.idea')
     }
 }
