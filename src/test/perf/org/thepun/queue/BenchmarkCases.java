@@ -4,9 +4,7 @@ import java.util.concurrent.CountDownLatch;
 
 class BenchmarkCases {
 
-    static void singlewProducerAndSingleConsumer(QueueHead<Long> queueHead, QueueTail<Long> queueTail, Long[] values) throws InterruptedException {
-        System.out.println("New iteration!");
-
+    static long singlewProducerAndSingleConsumer(QueueHead<Long> queueHead, QueueTail<Long> queueTail, Long[] values) throws InterruptedException {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch finishLatch = new CountDownLatch(2);
 
@@ -22,10 +20,14 @@ class BenchmarkCases {
         finishLatch.await();
         long finishTime = System.nanoTime();
 
-        System.out.println("Time: " + ((finishTime - startTime) / 1_000_000) + "ms");
+        long result = finishTime - startTime;
+        System.out.println("Time: " + (result / 1_000_000) + "ms");
         System.out.println("Final result: " + consumerThread.getResult());
+        System.out.println("Finished!");
 
-        //System.gc();
+        System.gc();
         Thread.sleep(1000);
+
+        return result;
     }
 }

@@ -1,6 +1,7 @@
 package org.thepun.queue.spsc;
 
 import org.thepun.queue.SimpleQueue;
+import org.thepun.unsafe.UnsafeUtils;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -78,12 +79,12 @@ public class SPSCLinkedQueue<T> implements SimpleQueue<T> {
 
             Object[] prevEmptyChainHead = emptyChain.get();
             if (prevEmptyChainHead == null) {
-                emptyChain.lazySet(oldHeadBunh);
+                emptyChain.set(oldHeadBunh);
             } else {
                 oldHeadBunh[REF_TO_NEXT_INDEX] = prevEmptyChainHead;
                 if (!emptyChain.compareAndSet(prevEmptyChainHead, oldHeadBunh)) {
                     oldHeadBunh[REF_TO_NEXT_INDEX] = null;
-                    emptyChain.lazySet(oldHeadBunh);
+                    emptyChain.set(oldHeadBunh);
                 }
             }
         }
