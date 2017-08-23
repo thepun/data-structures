@@ -8,7 +8,6 @@ import org.junit.runners.Parameterized.Parameters;
 import org.thepun.queue.mpsc.MPSCLinkedMultiplexer;
 import org.thepun.queue.spsc.SPSCBlockingLinkedQueue;
 import org.thepun.queue.spsc.SPSCLinkedQueue;
-import org.thepun.queue.spsc.SPSCAlignedLinkedQueue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -88,10 +87,7 @@ public class OrderCorrectnessTest {
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
 
-        SPSCLinkedQueue<Long> longSPSCLinkedQueue = new SPSCLinkedQueue<>();
-        list.add(new Object[] {longSPSCLinkedQueue, longSPSCLinkedQueue});
-
-        SPSCAlignedLinkedQueue<Long> longSPSCSplittedLinkedQueue = new SPSCAlignedLinkedQueue<>();
+        SPSCLinkedQueue<Long> longSPSCSplittedLinkedQueue = new SPSCLinkedQueue<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
         SPSCBlockingLinkedQueue<Long> longSPSCBlockingLinkedQueue = new SPSCBlockingLinkedQueue<>();

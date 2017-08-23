@@ -1,99 +1,140 @@
 package org.thepun.queue.spsc;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.thepun.queue.SimpleQueue;
 import org.thepun.unsafe.UnsafeUtils;
 
-import java.util.concurrent.atomic.AtomicReference;
+import sun.misc.Unsafe;
 
-@SuppressWarnings("unchecked")
 public class SPSCLinkedQueue<T> implements SimpleQueue<T> {
 
-    private static final int BUNCH_SIZE = 256;
+    private static final int BUNCH_SIZE = 1021;
     private static final int FIRST_ITEM_INDEX = 1;
     private static final int SECOND_ITEM_INDEX = 2;
-    private static final int REF_TO_NEXT_INDEX = 0;
     private static final int FIRST_OFFSET_INDEX = BUNCH_SIZE;
+    private static final int REFERENCE_SIZE = UnsafeUtils.getUnsafe().arrayIndexScale(Object[].class);
+    private static final long BASE_ARRAY_OFFSET = UnsafeUtils.getUnsafe().arrayBaseOffset(Object[].class);
+    private static final long FIRST_ITEM_INDEX_ADDRESS = BASE_ARRAY_OFFSET + REFERENCE_SIZE;
+    private static final long REF_TO_NEXT_INDEX_ADDRESS = BASE_ARRAY_OFFSET;
 
-    private static final Object[] EMPTY_ARRAY = new Object[BUNCH_SIZE];
+    private static final Unsafe MEMORY = UnsafeUtils.getUnsafe();
+    private static final Object[] NULLS = new Object[BUNCH_SIZE];
 
 
-    private int headIndex;
-    private Object[] headBunch;
-
-    private int tailIndex;
-    private Object[] tailBunch;
-    private Object[] tailEmptyChain;
-
+    private final CurrentBlock head;
+    private final CurrentBlock tail;
     private final AtomicReference<Object[]> emptyChain;
 
     public SPSCLinkedQueue() {
         Object[] firstBunch = new Object[BUNCH_SIZE];
-        headBunch = firstBunch;
-        tailBunch = firstBunch;
-        headIndex = FIRST_ITEM_INDEX;
-        tailIndex = FIRST_ITEM_INDEX;
+        head = new CurrentBlock();
+        tail = new CurrentBlock();
+        head.bunch = firstBunch;
+        tail.bunch = firstBunch;
+        head.index = FIRST_ITEM_INDEX;
+        tail.index = FIRST_ITEM_INDEX;
         emptyChain = new AtomicReference<>();
     }
 
     @Override
     public void addToTail(T element) {
-        if (tailIndex == FIRST_OFFSET_INDEX) {
-            Object[] newTailBunch;
-            
-            if (tailEmptyChain == null) {
+        int localIndex = tail.index;
+        Object[] localBunch = tail.bunch;
+        if (localIndex == FIRST_OFFSET_INDEX) {
+            Object[] localEmptyChain = tail.emptyChain;
+            if (localEmptyChain == null) {
                 Object[] newChain = emptyChain.getAndSet(null);
                 if (newChain == null) {
                     newChain = new Object[BUNCH_SIZE];
                 }
-                
-                tailEmptyChain = newChain;
+
+                localEmptyChain = newChain;
             }
 
-            newTailBunch = tailEmptyChain;
-            tailEmptyChain = (Object[]) tailEmptyChain[REF_TO_NEXT_INDEX];
-            newTailBunch[REF_TO_NEXT_INDEX] = null;
-            newTailBunch[FIRST_ITEM_INDEX] = element;
-            tailBunch[REF_TO_NEXT_INDEX] = newTailBunch;
-            tailBunch = newTailBunch;
-            tailIndex = SECOND_ITEM_INDEX;
-
+            tail.emptyChain = (Object[]) MEMORY.getObject(localEmptyChain, REF_TO_NEXT_INDEX_ADDRESS);
+            MEMORY.putObject(localEmptyChain, REF_TO_NEXT_INDEX_ADDRESS, null);
+            MEMORY.putObject(localEmptyChain, FIRST_ITEM_INDEX_ADDRESS, element);
+            MEMORY.putObject(localBunch, REF_TO_NEXT_INDEX_ADDRESS, localEmptyChain);
+            tail.bunch = localEmptyChain;
+            tail.index = SECOND_ITEM_INDEX;
             return;
         }
 
-        tailBunch[tailIndex++] = element;
+        MEMORY.putObject(localBunch, BASE_ARRAY_OFFSET + REFERENCE_SIZE * localIndex, element);
+        tail.index = localIndex + 1;
     }
 
     @Override
     public T removeFromHead() {
-        if (headIndex == FIRST_OFFSET_INDEX) {
-            Object[] newHeadBunch = (Object[]) headBunch[REF_TO_NEXT_INDEX];
-            if (newHeadBunch == null) {
+        int localIndex = head.index;
+        Object[] localBunch = head.bunch;
+        if (localIndex == FIRST_OFFSET_INDEX) {
+            Object[] oldHeadBunh = localBunch;
+            localBunch = (Object[]) MEMORY.getObject(localBunch, REF_TO_NEXT_INDEX_ADDRESS);
+            if (localBunch == null) {
+                // no more bunches at the moment
                 return null;
             }
 
-            Object[] oldHeadBunh = headBunch;
-            headIndex = FIRST_ITEM_INDEX;
-            headBunch = newHeadBunch;
+            // change current bunch to the next one
+            head.bunch = localBunch;
+            head.index = FIRST_ITEM_INDEX;
+            localIndex = FIRST_ITEM_INDEX;
 
-            System.arraycopy(EMPTY_ARRAY, 0, oldHeadBunh, 0, BUNCH_SIZE);
+            // clear array from reader thread to be sure about initial state without fences
+            System.arraycopy(NULLS, 0, oldHeadBunh, 0, BUNCH_SIZE);
 
+            // check if writer took all freed bunches
             Object[] prevEmptyChainHead = emptyChain.get();
             if (prevEmptyChainHead == null) {
-                emptyChain.set(oldHeadBunh);
+                // we do not care about the moment when writer will se new empty bunch
+                emptyChain.lazySet(oldHeadBunh);
             } else {
-                oldHeadBunh[REF_TO_NEXT_INDEX] = prevEmptyChainHead;
+                // add empty bunch to list
+                MEMORY.putObject(oldHeadBunh, REF_TO_NEXT_INDEX_ADDRESS, prevEmptyChainHead);
+
+                // if writer took empty bunches
                 if (!emptyChain.compareAndSet(prevEmptyChainHead, oldHeadBunh)) {
-                    oldHeadBunh[REF_TO_NEXT_INDEX] = null;
-                    emptyChain.set(oldHeadBunh);
+                    // ensure initial state is written by reader thread
+                    MEMORY.putObject(oldHeadBunh, REF_TO_NEXT_INDEX_ADDRESS, null);
+                    // we do not care when writer will have this bunch
+                    emptyChain.lazySet(oldHeadBunh);
                 }
             }
         }
 
-        Object element = headBunch[headIndex];
+        Object element = MEMORY.getObject(localBunch, BASE_ARRAY_OFFSET + REFERENCE_SIZE * localIndex);
         if (element != null) {
-            headIndex++;
+            head.index = localIndex + 1;
         }
 
         return (T) element;
+    }
+
+
+    /**
+     *  Aligned data structure for lesser false sharing
+     */
+    private static final class CurrentBlock {
+        // 12 bytes header
+
+        // 44 bytes gap before
+        private int before1, before2,
+                before3, before4, before5,
+                before6, before7, before8,
+                before9, before10, before11;
+
+        private int index;
+        private Object[] bunch;
+        private Object[] emptyChain;
+
+        // 60 bytes gap
+        private Object after1, after2,
+                after3, after4, after5,
+                after6, after7, after8,
+                after9, after10, after11,
+                after12, after13, after14,
+                after15;
     }
 }
