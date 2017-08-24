@@ -108,12 +108,12 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
 
                 Object[] prevEmptyChainHead = producer.emptyChain.get();
                 if (prevEmptyChainHead == null) {
-                    producer.emptyChain.lazySet(oldConsumerBunch);
+                    producer.emptyChain.set(oldConsumerBunch);
                 } else {
                     oldConsumerBunch[REF_TO_NEXT_INDEX] = prevEmptyChainHead;
                     if (!producer.emptyChain.compareAndSet(prevEmptyChainHead, oldConsumerBunch)) {
                         oldConsumerBunch[REF_TO_NEXT_INDEX] = null;
-                        producer.emptyChain.lazySet(oldConsumerBunch);
+                        producer.emptyChain.set(oldConsumerBunch);
                     }
                 }
             }
