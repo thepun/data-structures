@@ -9,7 +9,7 @@ import sun.misc.Unsafe;
 
 public class LinkedArrayQueue<T> implements SimpleQueue<T> {
 
-    private static final int BUNCH_SIZE = 1021;
+    private static final int BUNCH_SIZE = 1024;
     private static final int FIRST_ITEM_INDEX = 1;
     private static final int SECOND_ITEM_INDEX = 2;
     private static final int FIRST_OFFSET_INDEX = BUNCH_SIZE;
@@ -88,8 +88,8 @@ public class LinkedArrayQueue<T> implements SimpleQueue<T> {
             // check if writer took all freed bunches
             Object[] prevEmptyChainHead = emptyChain.get();
             if (prevEmptyChainHead == null) {
-                // we do not care about the moment when writer will se new empty bunch
-                emptyChain.lazySet(oldHeadBunh);
+                // we need to cross sfence to be able to rely on it
+                emptyChain.set(oldHeadBunh);
             } else {
                 // add empty bunch to list
                 MEMORY.putObject(oldHeadBunh, REF_TO_NEXT_INDEX_ADDRESS, prevEmptyChainHead);
@@ -98,8 +98,8 @@ public class LinkedArrayQueue<T> implements SimpleQueue<T> {
                 if (!emptyChain.compareAndSet(prevEmptyChainHead, oldHeadBunh)) {
                     // ensure initial state is written by reader thread
                     MEMORY.putObject(oldHeadBunh, REF_TO_NEXT_INDEX_ADDRESS, null);
-                    // we do not care when writer will have this bunch
-                    emptyChain.lazySet(oldHeadBunh);
+                    // again we need to cross sfence to be able to rely on it
+                    emptyChain.set(oldHeadBunh);
                 }
             }
         }
