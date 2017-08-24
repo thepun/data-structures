@@ -4,7 +4,7 @@ import org.thepun.queue.QueueHead;
 import org.thepun.queue.QueueTail;
 import org.thepun.queue.Router;
 
-public class Disruptor<T> implements Router<T> {
+public class SomeRouter<T> implements Router<T> {
 
     @Override
     public QueueTail<T> createProducer() {

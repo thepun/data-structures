@@ -7,7 +7,7 @@ import org.thepun.unsafe.UnsafeUtils;
 
 import sun.misc.Unsafe;
 
-public class SPSCLinkedQueue<T> implements SimpleQueue<T> {
+public class LinkedArrayQueue<T> implements SimpleQueue<T> {
 
     private static final int BUNCH_SIZE = 1021;
     private static final int FIRST_ITEM_INDEX = 1;
@@ -26,7 +26,7 @@ public class SPSCLinkedQueue<T> implements SimpleQueue<T> {
     private final CurrentBlock tail;
     private final AtomicReference<Object[]> emptyChain;
 
-    public SPSCLinkedQueue() {
+    public LinkedArrayQueue() {
         Object[] firstBunch = new Object[BUNCH_SIZE];
         head = new CurrentBlock();
         tail = new CurrentBlock();

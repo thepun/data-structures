@@ -1,7 +1,6 @@
 package org.thepun.queue.mpsc;
 
 import org.thepun.queue.Multiplexer;
-import org.thepun.queue.QueueHead;
 import org.thepun.queue.QueueTail;
 
 import java.util.Arrays;
@@ -11,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by thepun on 19.08.17.
  */
 @SuppressWarnings("unchecked")
-public class MPSCLinkedMultiplexer<T> implements Multiplexer<T> {
+public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
 
     private static final int BUNCH_SIZE = 256;
     private static final int FIRST_ITEM_INDEX = 1;
@@ -26,7 +25,7 @@ public class MPSCLinkedMultiplexer<T> implements Multiplexer<T> {
 
     private final AtomicReference<ProducerSubqueue[]> producers;
 
-    public MPSCLinkedMultiplexer() {
+    public LinkedArrayMultiplexer() {
         producers = new AtomicReference<>(new ProducerSubqueue[0]);
         nextProducerIndex = 0;
     }
@@ -133,7 +132,7 @@ public class MPSCLinkedMultiplexer<T> implements Multiplexer<T> {
 
     private static final class ProducerSubqueue<T> implements QueueTail<T> {
 
-        private final MPSCLinkedMultiplexer<T> parent;
+        private final LinkedArrayMultiplexer<T> parent;
 
         private int consumerIndex;
         private Object[] consumerBunch;
@@ -144,7 +143,7 @@ public class MPSCLinkedMultiplexer<T> implements Multiplexer<T> {
 
         private final AtomicReference<Object[]> emptyChain;
 
-        private ProducerSubqueue(MPSCLinkedMultiplexer<T> parent) {
+        private ProducerSubqueue(LinkedArrayMultiplexer<T> parent) {
             this.parent = parent;
 
             Object[] firstBunch = new Object[BUNCH_SIZE];

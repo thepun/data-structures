@@ -5,9 +5,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.thepun.queue.mpsc.MPSCLinkedMultiplexer;
-import org.thepun.queue.spsc.SPSCBlockingLinkedQueue;
-import org.thepun.queue.spsc.SPSCLinkedQueue;
+import org.thepun.queue.mpsc.LinkedArrayMultiplexer;
+import org.thepun.queue.spsc.BlockingLinkedArrayQueue;
+import org.thepun.queue.spsc.LinkedArrayQueue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,14 +87,14 @@ public class OrderCorrectnessTest {
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
 
-        SPSCLinkedQueue<Long> longSPSCSplittedLinkedQueue = new SPSCLinkedQueue<>();
+        LinkedArrayQueue<Long> longSPSCSplittedLinkedQueue = new LinkedArrayQueue<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
-        SPSCBlockingLinkedQueue<Long> longSPSCBlockingLinkedQueue = new SPSCBlockingLinkedQueue<>();
+        BlockingLinkedArrayQueue<Long> longSPSCBlockingLinkedQueue = new BlockingLinkedArrayQueue<>();
         list.add(new Object[] {longSPSCBlockingLinkedQueue, longSPSCBlockingLinkedQueue});
 
-        MPSCLinkedMultiplexer<Long> longMPSCLinkedMultiplexer = new MPSCLinkedMultiplexer<>();
-        list.add(new Object[] {longMPSCLinkedMultiplexer.createProducer(), longMPSCLinkedMultiplexer});
+        LinkedArrayMultiplexer<Long> longLinkedArrayMultiplexer = new LinkedArrayMultiplexer<>();
+        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
         return list;
     }

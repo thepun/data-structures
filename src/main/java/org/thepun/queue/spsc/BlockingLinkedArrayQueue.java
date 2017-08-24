@@ -10,11 +10,11 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * Created by thepun on 19.08.17.
  */
-public class SPSCBlockingLinkedQueue<T> extends SPSCLinkedQueue<T> implements SimpleBlockingQueue<T> {
+public class BlockingLinkedArrayQueue<T> extends LinkedArrayQueue<T> implements SimpleBlockingQueue<T> {
 
     private final AtomicReference<Thread> consumerThread;
 
-    public SPSCBlockingLinkedQueue() {
+    public BlockingLinkedArrayQueue() {
         consumerThread = new AtomicReference<>();
     }
 

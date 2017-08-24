@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
-import org.thepun.queue.spsc.SPSCBlockingLinkedQueue;
+import org.thepun.queue.spsc.BlockingLinkedArrayQueue;
 
 /**
  * Created by thepun on 20.08.17.
@@ -15,7 +15,7 @@ public class BlockingCorrectnessTest {
 
     @Test
     public void addAndGet() throws TimeoutException, InterruptedException {
-        SPSCBlockingLinkedQueue<Long> queue = new SPSCBlockingLinkedQueue<>();
+        BlockingLinkedArrayQueue<Long> queue = new BlockingLinkedArrayQueue<>();
 
         class ProducerThraed extends Thread {
             @Override

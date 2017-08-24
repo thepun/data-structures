@@ -5,13 +5,13 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.thepun.queue.TestUtils;
 
-public class SPSCLinkedQueueTest {
+public class LinkedArrayQueueTest {
 
     private volatile long result;
 
     @Test
     public void addAndGet() throws InterruptedException {
-        SPSCLinkedQueue<Long> queue = new SPSCLinkedQueue<>();
+        LinkedArrayQueue<Long> queue = new LinkedArrayQueue<>();
 
         class ProducerThraed extends Thread {
             @Override

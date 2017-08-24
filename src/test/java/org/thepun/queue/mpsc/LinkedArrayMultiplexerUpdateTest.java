@@ -2,7 +2,7 @@ package org.thepun.queue.mpsc;
 
 import org.junit.Test;
 
-public class MPSCLinkedMultiplexerUpdateTest {
+public class LinkedArrayMultiplexerUpdateTest {
 
     @Test
     public void createAndDestroyProducer() {

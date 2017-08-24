@@ -2,7 +2,7 @@ package org.thepun.queue;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.thepun.queue.mpsc.MPSCLinkedMultiplexer;
+import org.thepun.queue.mpsc.LinkedArrayMultiplexer;
 
 public class MPSCLinkedMultiplexerBenchmark {
 
@@ -20,7 +20,7 @@ public class MPSCLinkedMultiplexerBenchmark {
     private static volatile long result;
 
     public static void main(String[] args) throws InterruptedException {
-        final MPSCLinkedMultiplexer<Long> queue = new MPSCLinkedMultiplexer<>();
+        final LinkedArrayMultiplexer<Long> queue = new LinkedArrayMultiplexer<>();
 
         final QueueTail<Long>[] entry = new QueueTail[PRODUCERS];
         for (int m = 0; m < PRODUCERS; m++) {

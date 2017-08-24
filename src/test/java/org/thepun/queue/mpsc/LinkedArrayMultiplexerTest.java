@@ -7,7 +7,7 @@ import org.thepun.queue.QueueHead;
 import org.thepun.queue.QueueTail;
 import org.thepun.queue.TestUtils;
 
-public class MPSCLinkedMultiplexerTest {
+public class LinkedArrayMultiplexerTest {
 
     private static final int PRODUCERS = 3;
     private static final int N = 10_000_000;
@@ -17,7 +17,7 @@ public class MPSCLinkedMultiplexerTest {
 
     @Test
     public void addAndGet() throws InterruptedException {
-        MPSCLinkedMultiplexer<Long> queue = new MPSCLinkedMultiplexer<>();
+        LinkedArrayMultiplexer<Long> queue = new LinkedArrayMultiplexer<>();
 
         for (int k = 0; k < 100; k++) {
             result = 0;
