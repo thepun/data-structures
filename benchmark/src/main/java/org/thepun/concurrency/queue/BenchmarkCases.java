@@ -2,8 +2,6 @@ package org.thepun.concurrency.queue;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.thepun.queue.QueueHead;
-import org.thepun.queue.QueueTail;
 
 class BenchmarkCases {
 

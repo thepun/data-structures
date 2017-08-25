@@ -2,7 +2,6 @@ package org.thepun.concurrency.queue;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.thepun.queue.QueueHead;
 
 final class ConsumerThread extends StartFinishThread {
 

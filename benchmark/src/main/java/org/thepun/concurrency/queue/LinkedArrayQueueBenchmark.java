@@ -11,10 +11,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-import org.thepun.queue.spsc.AlignedLinkedArrayQueue;
-import org.thepun.queue.spsc.MoreAlignedUnsafeLinkedArrayQueue;
-import org.thepun.queue.spsc.LinkedArrayQueue;
-import org.thepun.queue.spsc.AlignedUnsafeLinkedArrayQueue;
+import org.thepun.concurrency.queue.spsc.LinkedArrayQueue;
+
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
