@@ -16,7 +16,7 @@ public class SomeDemultiplexer<T> implements Demultiplexer<T> {
     }
 
     @Override
-    public void addToTail(T element) {
-
+    public boolean addToTail(T element) {
+        return false;
     }
 }

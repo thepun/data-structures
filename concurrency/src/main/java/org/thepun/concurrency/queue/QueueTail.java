@@ -5,11 +5,6 @@ package org.thepun.concurrency.queue;
  */
 public interface QueueTail<T> {
 
-    /**
-     * Add element to the tail of the queue
-     *
-     * @param element
-     */
-    void addToTail(T element);
+    boolean addToTail(T element);
 
 }

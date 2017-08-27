@@ -1,11 +1,14 @@
 package org.thepun.concurrency.queue.spsc;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.thepun.concurrency.queue.QueueHead;
 import org.thepun.concurrency.queue.QueueTail;
 import org.thepun.unsafe.ArrayMemory;
 import org.thepun.unsafe.ArrayMemotyLayout;
+import org.thepun.unsafe.Fence;
 
 public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
 
@@ -35,7 +38,7 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
     }
 
     @Override
-    public void addToTail(T element) {
+    public boolean addToTail(T element) {
         int localIndex = tail.index;
         Object[] localBunch = tail.bunch;
         if (localIndex == FIRST_OFFSET_INDEX) {
@@ -47,19 +50,24 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
                 }
 
                 localEmptyChain = newChain;
+            } else {
+                Fence.full();
             }
+
+            ArrayMemory.setObject(localEmptyChain, FIRST_ITEM_INDEX_ADDRESS, element);
 
             tail.emptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, REF_TO_NEXT_INDEX_ADDRESS);
             ArrayMemory.setObject(localEmptyChain, REF_TO_NEXT_INDEX_ADDRESS, null);
-            ArrayMemory.setObject(localEmptyChain, FIRST_ITEM_INDEX_ADDRESS, element);
             ArrayMemory.setObject(localBunch, REF_TO_NEXT_INDEX_ADDRESS, localEmptyChain);
             tail.bunch = localEmptyChain;
             tail.index = SECOND_ITEM_INDEX;
-            return;
+            return true;
         }
 
+        Fence.full();
         ArrayMemory.setObject(localBunch, localIndex, element);
         tail.index = localIndex + 1;
+        return true;
     }
 
     @Override
@@ -85,7 +93,7 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
             // check if writer took all freed bunches
             Object[] prevEmptyChainHead = emptyChain.get();
             if (prevEmptyChainHead == null) {
-                // we need to cross sfence to be able to rely on it
+                // we need to cross fence to be able to rely on it
                 emptyChain.set(oldHeadBunh);
             } else {
                 // add empty bunch to list
@@ -95,7 +103,7 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
                 if (!emptyChain.compareAndSet(prevEmptyChainHead, oldHeadBunh)) {
                     // ensure initial state is written by reader thread
                     ArrayMemory.setObject(oldHeadBunh, REF_TO_NEXT_INDEX_ADDRESS, null);
-                    // again we need to cross sfence to be able to rely on it
+                    // again we need to cross fence to be able to rely on it
                     emptyChain.set(oldHeadBunh);
                 }
             }
@@ -107,6 +115,28 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
         }
 
         return (T) element;
+    }
+
+    @Override
+    public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
+        long start = System.nanoTime();
+        long finish = start + timeUnit.toNanos(timeout);
+
+        T element;
+        for (;;) {
+            element = removeFromHead();
+            if (element != null) {
+                return element;
+            }
+
+            if (System.nanoTime() > finish) {
+                throw new TimeoutException();
+            }
+
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+        }
     }
 
 

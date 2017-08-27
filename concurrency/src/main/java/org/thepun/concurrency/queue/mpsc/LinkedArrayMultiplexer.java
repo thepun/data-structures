@@ -4,6 +4,8 @@ import org.thepun.concurrency.queue.QueueTail;
 import org.thepun.concurrency.queue.Multiplexer;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -129,6 +131,11 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
         }
     }
 
+    @Override
+    public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
+        return null;
+    }
+
 
     private static final class ProducerSubqueue<T> implements QueueTail<T> {
 
@@ -156,7 +163,7 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
         }
 
         @Override
-        public void addToTail(T element) {
+        public boolean addToTail(T element) {
             if (producerIndex == FIRST_OFFSET_INDEX) {
                 Object[] newTailBunch;
 
@@ -176,11 +183,11 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
                 producerBunch[REF_TO_NEXT_INDEX] = newTailBunch;
                 producerBunch = newTailBunch;
                 producerIndex = SECOND_ITEM_INDEX;
-
-                return;
+                return true;
             }
 
             producerBunch[producerIndex++] = element;
+            return true;
         }
     }
 }

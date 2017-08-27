@@ -6,13 +6,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 import org.thepun.concurrency.queue.QueueHead;
-import org.thepun.concurrency.queue.BlockingQueueHead;
 import org.thepun.concurrency.queue.QueueTail;
 
 /**
  * Created by thepun on 19.08.17.
  */
-public class BlockingLinkedArrayQueue<T> extends LinkedArrayQueue<T> implements BlockingQueueHead<T>, QueueHead<T>, QueueTail<T> {
+public class BlockingLinkedArrayQueue<T> extends LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
 
     private final AtomicReference<Thread> consumerThread;
 
@@ -21,15 +20,17 @@ public class BlockingLinkedArrayQueue<T> extends LinkedArrayQueue<T> implements 
     }
 
     @Override
-    public void addToTail(T element) {
+    public boolean addToTail(T element) {
         super.addToTail(element);
 
         Thread waiter = consumerThread.get();
         LockSupport.unpark(waiter);
+
+        return true;
     }
 
     @Override
-    public T removeFromBlockingHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
+    public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
         long start = System.nanoTime();
         long time = timeUnit.toNanos(timeout);
 
