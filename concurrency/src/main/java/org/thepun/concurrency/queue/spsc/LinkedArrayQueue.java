@@ -50,8 +50,6 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
                 }
 
                 localEmptyChain = newChain;
-            } else {
-                Fence.full();
             }
 
             ArrayMemory.setObject(localEmptyChain, FIRST_ITEM_INDEX_ADDRESS, element);
@@ -64,7 +62,6 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
             return true;
         }
 
-        Fence.full();
         ArrayMemory.setObject(localBunch, localIndex, element);
         tail.index = localIndex + 1;
         return true;
