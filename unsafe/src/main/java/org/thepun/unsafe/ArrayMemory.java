@@ -1,6 +1,6 @@
 package org.thepun.unsafe;
 
-public class ArrayMemory {
+public final class ArrayMemory {
 
     private static final long OBJECT_OFFSET = ArrayMemotyLayout.getElementMemoryOffset(Object[].class, 0);
     private static final int OBJECT_SIZE = ArrayMemotyLayout.getElementSize(Object[].class);

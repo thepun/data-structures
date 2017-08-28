@@ -1,7 +1,7 @@
 package org.thepun.unsafe;
 
 @SuppressWarnings("unchecked")
-public class ArrayMemotyLayout {
+public final class ArrayMemotyLayout {
 
     public static <T> long getElementMemoryOffset(T[] array, int index) {
         return getElementMemoryOffset((Class<T[]>) array.getClass(), index);

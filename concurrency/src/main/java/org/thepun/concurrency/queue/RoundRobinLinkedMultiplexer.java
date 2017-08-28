@@ -1,19 +1,17 @@
-package org.thepun.concurrency.queue.mpsc;
+package org.thepun.concurrency.queue;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.thepun.concurrency.queue.Multiplexer;
-import org.thepun.concurrency.queue.QueueTail;
-
 /**
  * Created by thepun on 19.08.17.
  */
 @SuppressWarnings("unchecked")
-public class RoundRobinMultiplexer<T> implements Multiplexer<T> {
+public class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
 
+    // TODO: refactor constants
     private static final int BUNCH_SIZE = 1024;
     private static final int FIRST_ITEM_INDEX = 1;
     private static final int SECOND_ITEM_INDEX = 2;
@@ -26,7 +24,7 @@ public class RoundRobinMultiplexer<T> implements Multiplexer<T> {
     private int nextProducerIndex;
     private ProducerSubqueue<T>[] producers;
 
-    public RoundRobinMultiplexer() {
+    public RoundRobinLinkedMultiplexer() {
         producers = new ProducerSubqueue[0];
         nextProducerIndex = 0;
     }
@@ -128,24 +126,27 @@ public class RoundRobinMultiplexer<T> implements Multiplexer<T> {
 
     @Override
     public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
+        // TODO: implement busy wait
         return null;
     }
 
 
     private static final class ProducerSubqueue<T> implements QueueTail<T> {
 
-        private final RoundRobinMultiplexer<T> parent;
+        private final RoundRobinLinkedMultiplexer<T> parent;
 
+        // TODO: use aligned node
         private int consumerIndex;
         private Object[] consumerBunch;
 
+        // TODO: use aligned node
         private int producerIndex;
         private Object[] producerBunch;
         private Object[] producerEmptyChain;
 
         private final AtomicReference<Object[]> emptyChain;
 
-        private ProducerSubqueue(RoundRobinMultiplexer<T> parent) {
+        private ProducerSubqueue(RoundRobinLinkedMultiplexer<T> parent) {
             this.parent = parent;
 
             Object[] firstBunch = new Object[BUNCH_SIZE];

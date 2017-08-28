@@ -1,4 +1,4 @@
 package org.thepun.unsafe;
 
-public class UnsafeMemoryAccess {
+public final class UnsafeMemoryAccess {
 }

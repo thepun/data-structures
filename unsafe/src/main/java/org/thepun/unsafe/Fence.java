@@ -3,7 +3,7 @@ package org.thepun.unsafe;
 /**
  * Created by thepun on 27.08.17.
  */
-public class Fence {
+public final class Fence {
 
     public static void load() {
         UnsafeLocator.getUnsafe().loadFence();
