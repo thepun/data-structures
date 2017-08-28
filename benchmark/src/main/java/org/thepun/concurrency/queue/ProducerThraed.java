@@ -22,7 +22,12 @@ final class ProducerThraed extends StartFinishThread {
     void execute() {
         for (int k = 0; k < 100; k++) {
             for (int i = 0; i < length; i++) {
-                queueTail.addToTail(values[i]);
+                inner:
+                for (; ; ) {
+                    if (queueTail.addToTail(values[i])) {
+                        break inner;
+                    }
+                }
             }
         }
     }

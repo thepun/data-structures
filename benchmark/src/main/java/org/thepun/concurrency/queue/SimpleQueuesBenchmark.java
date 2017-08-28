@@ -11,7 +11,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-import org.thepun.concurrency.queue.spsc.LinkedArrayQueue;
 
 
 @State(Scope.Benchmark)
@@ -19,7 +18,7 @@ import org.thepun.concurrency.queue.spsc.LinkedArrayQueue;
 @Warmup(iterations = 10, batchSize = 1)
 @Measurement(iterations = 10, batchSize = 1)
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
-public class LinkedArrayQueueBenchmark {
+public class SimpleQueuesBenchmark {
 
     private Long[] values;
 
@@ -37,8 +36,21 @@ public class LinkedArrayQueueBenchmark {
     }
 
     @Benchmark
-    public long linkedArrayQueue() throws InterruptedException {
-        LinkedArrayQueue<Long> queue = new LinkedArrayQueue<>();
+    public long linkedBridge() throws InterruptedException {
+        LinkedBridge<Long> queue = new LinkedBridge<>();
         return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
+    }
+
+    @Benchmark
+    public long arrayQueue() throws InterruptedException {
+        ArrayQueue<Long> queue = new ArrayQueue<>(10000);
+        return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
+    }
+
+
+   public static void main(String[] args) throws InterruptedException {
+        SimpleQueuesBenchmark benchmark = new SimpleQueuesBenchmark();
+        benchmark.prepareValues();
+        benchmark.arrayQueue();
     }
 }
