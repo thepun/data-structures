@@ -1,20 +1,20 @@
 package org.thepun.concurrency.queue.mpsc;
 
-import org.thepun.concurrency.queue.QueueTail;
-import org.thepun.concurrency.queue.Multiplexer;
-
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.thepun.concurrency.queue.Multiplexer;
+import org.thepun.concurrency.queue.QueueTail;
+
 /**
  * Created by thepun on 19.08.17.
  */
 @SuppressWarnings("unchecked")
-public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
+public class RoundRobinMultiplexer<T> implements Multiplexer<T> {
 
-    private static final int BUNCH_SIZE = 256;
+    private static final int BUNCH_SIZE = 1024;
     private static final int FIRST_ITEM_INDEX = 1;
     private static final int SECOND_ITEM_INDEX = 2;
     private static final int REF_TO_NEXT_INDEX = 0;
@@ -24,26 +24,25 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
 
 
     private int nextProducerIndex;
+    private ProducerSubqueue<T>[] producers;
 
-    private final AtomicReference<ProducerSubqueue[]> producers;
-
-    public LinkedArrayMultiplexer() {
-        producers = new AtomicReference<>(new ProducerSubqueue[0]);
+    public RoundRobinMultiplexer() {
+        producers = new ProducerSubqueue[0];
         nextProducerIndex = 0;
     }
 
     @Override
-    public QueueTail<T> createProducer() {
-        ProducerSubqueue[] oldProducers = producers.get();
-        ProducerSubqueue[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
+    public synchronized QueueTail<T> createProducer() {
+        ProducerSubqueue<T>[] oldProducers = producers;
+        ProducerSubqueue<T>[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
         ProducerSubqueue<T> producer = new ProducerSubqueue<>(this);
         newProducers[oldProducers.length] = producer;
-        producers.lazySet(newProducers);
+        producers = newProducers;
         return producer;
     }
 
     @Override
-    public void destroyProducer(QueueTail<T> producer) {
+    public synchronized void destroyProducer(QueueTail<T> producer) {
         if (!(producer instanceof ProducerSubqueue)) {
             throw new IllegalArgumentException("Wrong producer");
         }
@@ -56,33 +55,29 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
         ProducerSubqueue[] newProducers;
         ProducerSubqueue[] oldProducers;
 
-        do {
-            oldProducers = producers.get();
-            int index = -1;
-            for (int i = 0; i < oldProducers.length; i++) {
-                if (oldProducers[i] == producer) {
-                    index = i;
-                    break;
-                }
+        oldProducers = producers;
+        int index = -1;
+        for (int i = 0; i < oldProducers.length; i++) {
+            if (oldProducers[i] == producer) {
+                index = i;
+                break;
             }
+        }
 
-            if (index == -1) {
-                throw new IllegalArgumentException("Producer not found");
-            }
+        if (index == -1) {
+            throw new IllegalArgumentException("Producer not found");
+        }
 
-            newProducers = new ProducerSubqueue[oldProducers.length - 1];
-            for (int i = 0; i < index; i++) {
-                newProducers[i] = oldProducers[i];
-            }
-            for (int i = index + 1; i < oldProducers.length; i++) {
-                newProducers[i - 1] = oldProducers[i];
-            }
-        } while (!producers.compareAndSet(oldProducers, newProducers));
+        newProducers = new ProducerSubqueue[oldProducers.length - 1];
+        System.arraycopy(oldProducers, 0, newProducers, 0, index);
+        System.arraycopy(oldProducers, index + 1, newProducers, index + 1 - 1, oldProducers.length - (index + 1));
+
+        producers = newProducers;
     }
 
     @Override
     public T removeFromHead() {
-        ProducerSubqueue[] localProducers = producers.get();
+        ProducerSubqueue<T>[] localProducers = producers;
 
         int producerIndex = nextProducerIndex;
         int producerCount = localProducers.length;
@@ -139,7 +134,7 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
 
     private static final class ProducerSubqueue<T> implements QueueTail<T> {
 
-        private final LinkedArrayMultiplexer<T> parent;
+        private final RoundRobinMultiplexer<T> parent;
 
         private int consumerIndex;
         private Object[] consumerBunch;
@@ -150,7 +145,7 @@ public class LinkedArrayMultiplexer<T> implements Multiplexer<T> {
 
         private final AtomicReference<Object[]> emptyChain;
 
-        private ProducerSubqueue(LinkedArrayMultiplexer<T> parent) {
+        private ProducerSubqueue(RoundRobinMultiplexer<T> parent) {
             this.parent = parent;
 
             Object[] firstBunch = new Object[BUNCH_SIZE];

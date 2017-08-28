@@ -10,7 +10,7 @@ import org.thepun.unsafe.ArrayMemory;
 import org.thepun.unsafe.ArrayMemotyLayout;
 import org.thepun.unsafe.Fence;
 
-public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
+public class LinkedArrayBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     private static final int BUNCH_SIZE = 1024;
     private static final int FIRST_ITEM_INDEX = 1;
@@ -26,7 +26,7 @@ public class LinkedArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
     private final CurrentBlock tail;
     private final AtomicReference<Object[]> emptyChain;
 
-    public LinkedArrayQueue() {
+    public LinkedArrayBridge() {
         Object[] firstBunch = new Object[BUNCH_SIZE];
         head = new CurrentBlock();
         tail = new CurrentBlock();

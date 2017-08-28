@@ -5,8 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.thepun.concurrency.queue.spsc.BlockingLinkedArrayQueue;
-
 /**
  * Created by thepun on 20.08.17.
  */

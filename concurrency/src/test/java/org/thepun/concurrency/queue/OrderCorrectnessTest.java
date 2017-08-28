@@ -13,9 +13,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.thepun.concurrency.queue.mpsc.LinkedArrayMultiplexer;
-import org.thepun.concurrency.queue.spsc.BlockingLinkedArrayQueue;
-import org.thepun.concurrency.queue.spsc.LinkedArrayQueue;
+import org.thepun.concurrency.queue.mpsc.RoundRobinMultiplexer;
+import org.thepun.concurrency.queue.spsc.LinkedArrayBridge;
 
 @RunWith(Parameterized.class)
 public class OrderCorrectnessTest {
@@ -87,13 +86,13 @@ public class OrderCorrectnessTest {
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
 
-        LinkedArrayQueue<Long> longSPSCSplittedLinkedQueue = new LinkedArrayQueue<>();
+        LinkedArrayBridge<Long> longSPSCSplittedLinkedQueue = new LinkedArrayBridge<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
         BlockingLinkedArrayQueue<Long> longSPSCBlockingLinkedQueue = new BlockingLinkedArrayQueue<>();
         list.add(new Object[] {longSPSCBlockingLinkedQueue, longSPSCBlockingLinkedQueue});
 
-        LinkedArrayMultiplexer<Long> longLinkedArrayMultiplexer = new LinkedArrayMultiplexer<>();
+        RoundRobinMultiplexer<Long> longLinkedArrayMultiplexer = new RoundRobinMultiplexer<>();
         list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
         return list;
