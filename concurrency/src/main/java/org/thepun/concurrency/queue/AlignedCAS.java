@@ -1,13 +1,14 @@
 package org.thepun.concurrency.queue;
 
 import org.thepun.unsafe.Atomic;
+import org.thepun.unsafe.Fence;
 import org.thepun.unsafe.ObjectMemoryLayout;
 
-final class AlignedCounter {
+final class AlignedCAS {
 
     private static final long valueOffset;
     static {
-        valueOffset = ObjectMemoryLayout.getFieldMemoryOffset(AlignedCounter.class, "value");
+        valueOffset = ObjectMemoryLayout.getFieldMemoryOffset(AlignedCAS.class, "value");
     }
 
 
@@ -31,7 +32,12 @@ final class AlignedCounter {
         return value;
     }
 
-    public long increment() {
+    public void set(long newValue) {
+        value = newValue;
+        Fence.store();
+    }
+
+    /*public long increment() {
         long current;
         do {
             current = value;
@@ -47,17 +53,21 @@ final class AlignedCounter {
         }
 
         return current + 1L;
-    }
+    }*/
 
-    public long tryIncrement(long upperLimit) {
+    public long tryGetAndIncrement(long upperLimit) {
         long current;
         do {
             current = value;
-            if (current == upperLimit) {
+            if (current >= upperLimit) {
                 return -1;
             }
         } while (!Atomic.compareAndSwapLong(this, valueOffset, current, current + 1L));
 
-        return current + 1L;
+        return current;
+    }
+
+    public boolean compareAndSwap(long expectedValue, long newValue) {
+        return Atomic.compareAndSwapLong(this, valueOffset, expectedValue, newValue);
     }
 }

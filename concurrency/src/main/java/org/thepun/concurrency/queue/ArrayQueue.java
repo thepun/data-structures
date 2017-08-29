@@ -7,8 +7,8 @@ public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
 
     private final int size;
     private final Object[] data;
-    private final AlignedCounter readCounter;
-    private final AlignedCounter writeCounter;
+    private final AlignedCAS readCounter;
+    private final AlignedCAS writeCounter;
 
     public ArrayQueue(int queueSize) {
         if (queueSize < 1) {
@@ -17,20 +17,25 @@ public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
 
         size = queueSize;
         data = new Object[queueSize];
-        readCounter = new AlignedCounter();
-        writeCounter = new AlignedCounter();
+        readCounter = new AlignedCAS();
+        writeCounter = new AlignedCAS();
     }
 
     @Override
     public T removeFromHead() {
         long writeIndex = writeCounter.get();
-        long readIndex = readCounter.tryIncrement(writeIndex);
+        long readIndex = readCounter.tryGetAndIncrement(writeIndex);
         if (readIndex == -1) {
             return null;
         }
 
         int index = (int) readIndex % size;
-        return (T) data[index];
+        Object element;
+        do {
+            element = data[index];
+        } while (element == null);
+
+        return (T) element;
     }
 
     @Override
@@ -42,7 +47,7 @@ public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
     @Override
     public boolean addToTail(T element) {
         long readIndex = readCounter.get();
-        long writeIndex = writeCounter.tryIncrement(readIndex + size);
+        long writeIndex = writeCounter.tryGetAndIncrement(readIndex + size);
         if (writeIndex == -1) {
             return false;
         }

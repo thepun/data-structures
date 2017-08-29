@@ -47,10 +47,20 @@ public class SimpleQueuesBenchmark {
         return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
     }
 
-
-   public static void main(String[] args) throws InterruptedException {
-        SimpleQueuesBenchmark benchmark = new SimpleQueuesBenchmark();
-        benchmark.prepareValues();
-        benchmark.arrayQueue();
+    @Benchmark
+    public long mergedArrayQueue() throws InterruptedException {
+        MergedArrayQueue<Long> queue = new MergedArrayQueue<>(10000);
+        return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
     }
+
+
+    /*public static void main(String[] args) throws InterruptedException {
+        while (true) {
+            SimpleQueuesBenchmark benchmark = new SimpleQueuesBenchmark();
+            benchmark.prepareValues();
+            benchmark.arrayQueue();
+
+            System.out.println("next");
+        }
+    }*/
 }

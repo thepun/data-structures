@@ -96,6 +96,9 @@ public class OrderCorrectnessTest {
         ArrayQueue<Long> arrayQueue = new ArrayQueue<>(10000000);
         list.add(new Object[] {arrayQueue, arrayQueue});
 
+        MergedArrayQueue<Long> mergedArrayQueue = new MergedArrayQueue<>(10000000);
+        list.add(new Object[] {mergedArrayQueue, mergedArrayQueue});
+
         return list;
     }
 }
