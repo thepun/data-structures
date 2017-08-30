@@ -259,8 +259,6 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             int index = (int) readIndex % size;
             Object element = ArrayMemory.getObject(data, index);
-            ArrayMemory.setObject(data, index, null);
-            Fence.store();
 
             localReadCounter = Long.MAX_VALUE;
             return (T) element;
