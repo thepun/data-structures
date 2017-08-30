@@ -1,14 +1,14 @@
 package org.thepun.concurrency.queue;
 
 import org.thepun.unsafe.Atomic;
-import org.thepun.unsafe.Fence;
 import org.thepun.unsafe.ObjectMemoryLayout;
+import org.thepun.unsafe.Volatile;
 
-final class AlignedCAS {
+final class AlignedLong {
 
     private static final long valueOffset;
     static {
-        valueOffset = ObjectMemoryLayout.getFieldMemoryOffset(AlignedCAS.class, "value");
+        valueOffset = ObjectMemoryLayout.getFieldMemoryOffset(AlignedLong.class, "value");
     }
 
 
@@ -27,6 +27,11 @@ final class AlignedCAS {
             after3, after4, after5,
             after6, after7;
 
+    // 64 bytes gap
+    private long after8, after9,
+            after10, after11, after12,
+            after13, after14, after15;
+
 
     public long get() {
         return value;
@@ -34,28 +39,24 @@ final class AlignedCAS {
 
     public void set(long newValue) {
         value = newValue;
-        Fence.store();
     }
 
-    /*public long increment() {
+    public long volatileGet() {
+        return Volatile.getLong(this, valueOffset);
+    }
+
+    public void volatileSet(long newValue) {
+        Volatile.setLong(this, valueOffset, newValue);
+    }
+
+    public void increment() {
         long current;
         do {
             current = value;
         } while (!Atomic.compareAndSwapLong(this, valueOffset, current, current + 1L));
-
-        return current + 1L;
     }
 
-    public long increment(long previousValue) {
-        long current = previousValue;
-        while (!Atomic.compareAndSwapLong(this, valueOffset, current, current + 1L)) {
-            current = value;
-        }
-
-        return current + 1L;
-    }*/
-
-    public long tryGetAndIncrement(long upperLimit) {
+    public long getAndIncrement(long upperLimit) {
         long current;
         do {
             current = value;

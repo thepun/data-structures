@@ -3,16 +3,14 @@ package org.thepun.concurrency.queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
+public class ArrayBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     private final int size;
     private final Object[] data;
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
-    private final AlignedLong readCounterForWriter;
-    private final AlignedLong writeCounterForReader;
 
-    public ArrayQueue(int queueSize) {
+    public ArrayBridge(int queueSize) {
         if (queueSize < 1) {
             throw new IllegalArgumentException("Size should be greater then zero");
         }
@@ -21,15 +19,13 @@ public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
         data = new Object[queueSize];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
-        readCounterForWriter = new AlignedLong();
-        writeCounterForReader = new AlignedLong();
     }
 
     @Override
     public T removeFromHead() {
-        long writeIndex = writeCounterForReader.get();
-        long readIndex = readCounter.getAndIncrement(writeIndex);
-        if (readIndex == -1) {
+        long writeIndex = writeCounter.get();
+        long readIndex = readCounter.get();
+        if (readIndex >= writeIndex) {
             return null;
         }
 
@@ -39,7 +35,7 @@ public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
             element = data[index];
         } while (element == null);
 
-        readCounterForWriter.increment();
+        readCounter.set(readIndex + 1);
 
         return (T) element;
     }
@@ -52,16 +48,16 @@ public class ArrayQueue<T> implements QueueHead<T>, QueueTail<T> {
 
     @Override
     public boolean addToTail(T element) {
-        long readIndex = readCounterForWriter.get();
-        long writeIndex = writeCounter.getAndIncrement(readIndex + size);
-        if (writeIndex == -1) {
+        long readIndex = readCounter.get();
+        long writeIndex = writeCounter.get();
+        if (writeIndex >= readIndex + size) {
             return false;
         }
 
         int index = (int) writeIndex % size;
         data[index] = element;
 
-        writeCounterForReader.increment();
+        writeCounter.set(writeIndex + 1);
 
         return true;
     }

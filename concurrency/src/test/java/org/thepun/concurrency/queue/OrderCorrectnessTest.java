@@ -96,8 +96,8 @@ public class OrderCorrectnessTest {
         ArrayQueue<Long> arrayQueue = new ArrayQueue<>(10000000);
         list.add(new Object[] {arrayQueue, arrayQueue});
 
-        MergedArrayQueue<Long> mergedArrayQueue = new MergedArrayQueue<>(10000000);
-        list.add(new Object[] {mergedArrayQueue, mergedArrayQueue});
+        ArrayBridge<Long> arrayBridge = new ArrayBridge<>(10000000);
+        list.add(new Object[] {arrayBridge, arrayBridge});
 
         return list;
     }

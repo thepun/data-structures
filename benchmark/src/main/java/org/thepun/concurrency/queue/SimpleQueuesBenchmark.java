@@ -42,14 +42,14 @@ public class SimpleQueuesBenchmark {
     }
 
     @Benchmark
-    public long arrayQueue() throws InterruptedException {
-        ArrayQueue<Long> queue = new ArrayQueue<>(10000);
+    public long arrayBridge() throws InterruptedException {
+        ArrayBridge<Long> queue = new ArrayBridge<>(10000);
         return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
     }
 
     @Benchmark
-    public long mergedArrayQueue() throws InterruptedException {
-        MergedArrayQueue<Long> queue = new MergedArrayQueue<>(10000);
+    public long arrayQueue() throws InterruptedException {
+        ArrayQueue<Long> queue = new ArrayQueue<>(10000);
         return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
     }
 
