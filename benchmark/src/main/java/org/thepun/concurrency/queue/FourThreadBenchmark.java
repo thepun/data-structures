@@ -12,6 +12,10 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
+
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
@@ -37,7 +41,7 @@ public class FourThreadBenchmark {
 
     @Benchmark
     public long ringBufferRouterMultiplexer() throws InterruptedException {
-        RingBufferRouter<Long> queue = new RingBufferRouter<>(100);
+        RingBufferRouter<Long> queue = new RingBufferRouter<>(10000);
 
         QueueTail<Long>[] queueTails = new QueueTail[3];
         queueTails[0] = queue.createProducer();
@@ -49,7 +53,7 @@ public class FourThreadBenchmark {
 
     @Benchmark
     public long ringBufferRouterDemultiplexer() throws InterruptedException {
-        RingBufferRouter<Long> queue = new RingBufferRouter<>(100);
+        RingBufferRouter<Long> queue = new RingBufferRouter<>(10000);
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -89,6 +93,41 @@ public class FourThreadBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
+    @Benchmark
+    public long arrayBlockingQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+        queueHeads[2] = queue;
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long linkedBlockingQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedBlockingQueue<>());
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+        queueHeads[2] = queue;
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long linkedTransferQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<>());
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+        queueHeads[2] = queue;
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
 
     /*public static void main(String[] args) throws InterruptedException {
         while (true) {
