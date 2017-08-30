@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by thepun on 19.08.17.
  */
 @SuppressWarnings("unchecked")
-public class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
+public final class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
 
     // TODO: refactor constants
     private static final int BUNCH_SIZE = 1024;

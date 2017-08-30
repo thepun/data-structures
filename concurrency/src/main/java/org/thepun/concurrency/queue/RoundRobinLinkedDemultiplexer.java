@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.thepun.unsafe.ArrayMemory;
 
-public class RoundRobinLinkedDemultiplexer<T> implements Demultiplexer<T> {
+public final class RoundRobinLinkedDemultiplexer<T> implements Demultiplexer<T> {
 
     private int nextConsumerIndex;
     private ConsumerSubqueue<T>[] consumers;

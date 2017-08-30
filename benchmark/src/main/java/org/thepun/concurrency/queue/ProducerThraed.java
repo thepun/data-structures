@@ -5,29 +5,34 @@ import java.util.concurrent.CountDownLatch;
 
 final class ProducerThraed extends StartFinishThread {
 
-    private final Long[] values;
     private final int length;
+    private final Long[] values;
     private final QueueTail<Long> queueTail;
 
-    ProducerThraed(CountDownLatch startLatch, CountDownLatch finishLatch, QueueTail<Long> queueTail, Long[] values) {
+    ProducerThraed(CountDownLatch startLatch, CountDownLatch finishLatch, QueueTail<Long> queueTail, Long[] values, int count) {
         super(startLatch, finishLatch);
 
         this.values = values;
         this.queueTail = queueTail;
 
-        length = values.length;
+        length = count;
     }
 
     @Override
     void execute() {
-        for (int k = 0; k < 100; k++) {
-            for (int i = 0; i < length; i++) {
-                inner:
-                for (; ; ) {
-                    if (queueTail.addToTail(values[i])) {
-                        break inner;
-                    }
+        int arraySize = values.length;
+
+        int c = 0;
+        for (int i = 0; i < length; i++) {
+            for (; ; ) {
+                if (queueTail.addToTail(values[c])) {
+                    break;
                 }
+            }
+
+            c++;
+            if (c == arraySize) {
+                c = 0;
             }
         }
     }

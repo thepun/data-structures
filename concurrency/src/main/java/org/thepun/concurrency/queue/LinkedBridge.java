@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.thepun.unsafe.ArrayMemory;
 
-public class LinkedBridge<T> implements QueueHead<T>, QueueTail<T> {
+public final class LinkedBridge<T> implements QueueHead<T>, QueueTail<T> {
 
 
     private final AlignedLinkedNode head;

@@ -18,7 +18,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @Warmup(iterations = 10, batchSize = 1)
 @Measurement(iterations = 10, batchSize = 1)
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
-public class SimpleQueuesBenchmark {
+public class TwoThreadBenchmark {
 
     private Long[] values;
 
@@ -38,19 +38,31 @@ public class SimpleQueuesBenchmark {
     @Benchmark
     public long linkedBridge() throws InterruptedException {
         LinkedBridge<Long> queue = new LinkedBridge<>();
-        return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 
     @Benchmark
-    public long arrayBridge() throws InterruptedException {
-        ArrayBridge<Long> queue = new ArrayBridge<>(10000);
-        return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
+    public long ringBufferBridge() throws InterruptedException {
+        RingBufferBridge<Long> queue = new RingBufferBridge<>(1000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 
     @Benchmark
-    public long arrayQueue() throws InterruptedException {
-        ArrayQueue<Long> queue = new ArrayQueue<>(10000);
-        return BenchmarkCases.singlewProducerAndSingleConsumer(queue, queue, values);
+    public long ringBufferRouter() throws InterruptedException {
+        RingBufferRouter<Long> queue = new RingBufferRouter<>(1000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
+    public long roundRobinMultiplexer() throws InterruptedException {
+        RoundRobinLinkedMultiplexer<Long> queue = new RoundRobinLinkedMultiplexer<>();
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
+    public long roundRobinDemultiplexer() throws InterruptedException {
+        RoundRobinLinkedDemultiplexer<Long> queue = new RoundRobinLinkedDemultiplexer<>();
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue, values, 100_000_000);
     }
 
 

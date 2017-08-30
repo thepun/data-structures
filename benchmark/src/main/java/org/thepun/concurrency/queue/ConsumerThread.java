@@ -25,17 +25,15 @@ final class ConsumerThread extends StartFinishThread {
     void execute() {
         Long value;
 
-        for (int k = 0; k < 100; k++) {
-            long tempValue = 0;
-            for (int i = 0; i < count; i++) {
-                do {
-                    value = queueHead.removeFromHead();
-                } while (value == null);
+        long tempValue = 0;
+        for (int i = 0; i < count; i++) {
+            do {
+                value = queueHead.removeFromHead();
+            } while (value == null);
 
-                tempValue += value.longValue();
-            }
-
-            result += tempValue;
+            tempValue += value.longValue();
         }
+
+        result += tempValue;
     }
 }

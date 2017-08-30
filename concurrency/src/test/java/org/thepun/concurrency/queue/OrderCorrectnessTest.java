@@ -93,10 +93,10 @@ public class OrderCorrectnessTest {
         RoundRobinLinkedDemultiplexer<Long> longLinkedArrayDemultiplexer = new RoundRobinLinkedDemultiplexer<>();
         list.add(new Object[] {longLinkedArrayDemultiplexer, longLinkedArrayDemultiplexer.createConsumer()});
 
-        ArrayQueue<Long> arrayQueue = new ArrayQueue<>(10000000);
-        list.add(new Object[] {arrayQueue, arrayQueue});
+        RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
-        ArrayBridge<Long> arrayBridge = new ArrayBridge<>(10000000);
+        RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
         list.add(new Object[] {arrayBridge, arrayBridge});
 
         return list;
