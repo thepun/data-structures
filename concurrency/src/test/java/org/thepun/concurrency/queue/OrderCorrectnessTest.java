@@ -3,6 +3,7 @@ package org.thepun.concurrency.queue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,6 +40,23 @@ public class OrderCorrectnessTest {
     }
 
     @Test
+    public void addAndGetAndAddAndGet() {
+        Long element;
+
+        tail.addToTail(1L);
+
+        element = head.removeFromHead();
+        assertNotNull(element);
+        assertEquals(1L, (long) element);
+
+        tail.addToTail(3L);
+
+        element = head.removeFromHead();
+        assertNotNull(element);
+        assertEquals(3L, (long) element);
+    }
+
+    @Test
     public void noMoreElements() {
         for (int i = 0; i < 1000; i++) {
             tail.addToTail(1L);
@@ -69,10 +87,15 @@ public class OrderCorrectnessTest {
     public void addBunchAndGetBunchMultipleTimes() {
         for (int l = 0; l < 10000; l++) {
             for (long i = 0; i < 10000; i++) {
-                tail.addToTail(i * l);
+                boolean result = tail.addToTail(i * l);
+                assertTrue(result);
             }
 
             for (long i = 0; i < 10000; i++) {
+                if (i == 0 && l == 1999) {
+                    Object o = null;
+                }
+
                 Long element = head.removeFromHead();
                 assertNotNull(element);
                 assertEquals(i * l, (long) element);
@@ -93,11 +116,11 @@ public class OrderCorrectnessTest {
         RoundRobinLinkedDemultiplexer<Long> longLinkedArrayDemultiplexer = new RoundRobinLinkedDemultiplexer<>();
         list.add(new Object[] {longLinkedArrayDemultiplexer, longLinkedArrayDemultiplexer.createConsumer()});
 
-        RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
-        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
-
         RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
         list.add(new Object[] {arrayBridge, arrayBridge});
+
+        RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
         return list;
     }

@@ -124,8 +124,8 @@ public final class RingBufferRouter<T> implements Router<T> {
     private void updateProducers(RingBufferProducer<T>[] newProducers) {
         Fence.full();
         producers = newProducers;
-        for (int i = 0; i < newProducers.length; i++) {
-            newProducers[i].producers = newProducers;
+        for (int i = 0; i < consumers.length; i++) {
+            consumers[i].producers = newProducers;
         }
         Fence.full();
     }
@@ -133,8 +133,8 @@ public final class RingBufferRouter<T> implements Router<T> {
     private void updateConsumers(RingBufferConsumer<T>[] newConsumers) {
         Fence.full();
         consumers = newConsumers;
-        for (int i = 0; i < newConsumers.length; i++) {
-            newConsumers[i].consumers = newConsumers;
+        for (int i = 0; i < producers.length; i++) {
+            producers[i].consumers = newConsumers;
         }
         Fence.full();
     }
@@ -147,44 +147,58 @@ public final class RingBufferRouter<T> implements Router<T> {
         private final int size;
         private final Object[] data;
         private final AlignedLong writeCounter;
-        private final AlignedLong readCounterForProducers;
-        private final AlignedLong writeCounterForConsumers;
 
-        private long localWriteCounterForConsumers;
-        private RingBufferProducer<T>[] producers;
+        private long localReadCounter;
+        private long localWriteCounter;
+        private RingBufferConsumer<T>[] consumers;
 
         private RingBufferProducer(RingBufferRouter<T> parent) {
             this.parent = parent;
 
             size = parent.size;
             data = parent.data;
+            consumers = parent.consumers;
             writeCounter = parent.writeCounter;
-            readCounterForProducers = parent.readCounterForProducers;
-            writeCounterForConsumers = parent.writeCounterForConsumers;
         }
 
         @Override
         public boolean addToTail(T element) {
-            long readIndex = readCounterForProducers.get();
-            long writeIndex = writeCounter.getAndIncrement(readIndex + size);
-            if (writeIndex == -1) {
-                return false;
+            long readIndex = localReadCounter;
+
+            long writeIndex = writeCounter.get();
+            localWriteCounter = writeIndex;
+
+            if (writeIndex >= readIndex + size) {
+                readIndex = Long.MAX_VALUE;
+                for (int i = 0; i < consumers.length; i++) {
+                    long localReadCounterFromConsumer = consumers[i].localReadCounter;
+                    if (readIndex > localReadCounterFromConsumer) {
+                        readIndex = localReadCounterFromConsumer;
+                    }
+                }
+                localReadCounter = readIndex;
+
+                if (writeIndex >= readIndex + size) {
+                    localWriteCounter = Long.MAX_VALUE;
+                    return false;
+                }
+            }
+
+            while (!writeCounter.compareAndSwap(writeIndex, writeIndex + 1)) {
+                writeIndex = writeCounter.get();
+                localWriteCounter = writeIndex;
+
+                if (writeIndex >= readIndex + size) {
+                    localWriteCounter = Long.MAX_VALUE;
+                    return false;
+                }
             }
 
             int index = (int) writeIndex % size;
             ArrayMemory.setObject(data, index, element);
-            Fence.store();
+            Fence.full();
 
-            long minWriteCounterForConsumers = writeIndex + 1;
-            localWriteCounterForConsumers = minWriteCounterForConsumers;
-            for (int i = 0; i < producers.length; i++) {
-                long anotherLocalCounter = producers[i].localWriteCounterForConsumers;
-                if (minWriteCounterForConsumers > anotherLocalCounter) {
-                    minWriteCounterForConsumers = anotherLocalCounter;
-                }
-            }
-            writeCounterForConsumers.set(minWriteCounterForConsumers);
-
+            localWriteCounter = Long.MAX_VALUE;
             return true;
         }
     }
@@ -197,50 +211,67 @@ public final class RingBufferRouter<T> implements Router<T> {
         private final int size;
         private final Object[] data;
         private final AlignedLong readCounter;
-        private final AlignedLong readCounterForProducers;
-        private final AlignedLong writeCounterForConsumers;
 
-        private long localReadCounterForProducers;
-        private RingBufferConsumer<T>[] consumers;
+        private long localReadCounter;
+        private long localWriteCounter;
+        private RingBufferProducer<T>[] producers;
 
         private RingBufferConsumer(RingBufferRouter<T> parent) {
             this.parent = parent;
 
             size = parent.size;
             data = parent.data;
+            producers = parent.producers;
             readCounter = parent.readCounter;
-            readCounterForProducers = parent.readCounterForProducers;
-            writeCounterForConsumers = parent.writeCounterForConsumers;
         }
 
         @Override
         public T removeFromHead() {
-            long writeIndex = writeCounterForConsumers.get();
-            long readIndex = readCounter.getAndIncrement(writeIndex);
-            if (readIndex == -1) {
-                return null;
+            long writeIndex = localWriteCounter;
+
+            long readIndex = readCounter.get();
+            localReadCounter = readIndex;
+
+            if (readIndex >= writeIndex) {
+                writeIndex = Long.MAX_VALUE;
+                for (int i = 0; i < producers.length; i++) {
+                    long localWriteCounterFromConsumer = producers[i].localWriteCounter;
+                    if (writeIndex > localWriteCounterFromConsumer) {
+                        writeIndex = localWriteCounterFromConsumer;
+                    }
+                }
+                localWriteCounter = writeIndex;
+
+                if (readIndex >= writeIndex) {
+                    localReadCounter = Long.MAX_VALUE;
+                    return null;
+                }
+            }
+
+            while (!readCounter.compareAndSwap(readIndex, readIndex + 1)) {
+                readIndex = readCounter.get();
+                localReadCounter = readIndex;
+
+                if (readIndex >= writeIndex) {
+                    localReadCounter = Long.MAX_VALUE;
+                    return null;
+                }
             }
 
             int index = (int) readIndex % size;
-            Object element;
-            do {
-                element = ArrayMemory.getObject(data, index);
-            } while (element == null);
-            ArrayMemory.setObject(data, index, null);
-            Fence.store();
-
-            long minReadCounterForProducers = readIndex + 1;
-            localReadCounterForProducers = minReadCounterForProducers;
-            for (int i = 0; i < consumers.length; i++) {
-                long anotherLocalCounter = consumers[i].localReadCounterForProducers;
-                if (minReadCounterForProducers > anotherLocalCounter) {
-                    minReadCounterForProducers = anotherLocalCounter;
-                }
+            Object element = ArrayMemory.getObject(data, index);
+            if (element == null) {
+                Object o = null;
             }
-            readCounterForProducers.set(minReadCounterForProducers);
+            //ArrayMemory.setObject(data, index, null);
+            Fence.full();
 
-            return (T) element;
+            localReadCounter = Long.MAX_VALUE;
+            return (T) v;
+            //return (T) element;
         }
+
+        private static final Long v = 1L;
 
         @Override
         public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {

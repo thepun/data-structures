@@ -37,19 +37,19 @@ public class FourThreadBenchmark {
 
     @Benchmark
     public long ringBufferRouterMultiplexer() throws InterruptedException {
-        RingBufferRouter<Long> queue = new RingBufferRouter<>(1000);
+        RingBufferRouter<Long> queue = new RingBufferRouter<>(100);
 
         QueueTail<Long>[] queueTails = new QueueTail[3];
         queueTails[0] = queue.createProducer();
         queueTails[1] = queue.createProducer();
         queueTails[2] = queue.createProducer();
 
-        return BenchmarkCases.multipleProducersAndSingleConsumers(queue.createConsumer(), queueTails, values, 100_000_000);
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue.createConsumer(), queueTails, values, 100_000_000);
     }
 
     @Benchmark
     public long ringBufferRouterDemultiplexer() throws InterruptedException {
-        RingBufferRouter<Long> queue = new RingBufferRouter<>(1000);
+        RingBufferRouter<Long> queue = new RingBufferRouter<>(100);
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -74,7 +74,7 @@ public class FourThreadBenchmark {
         queueTails[1] = queue.createProducer();
         queueTails[2] = queue.createProducer();
 
-        return BenchmarkCases.multipleProducersAndSingleConsumers(queue, queueTails, values, 100_000_000);
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue, queueTails, values, 100_000_000);
     }
 
     @Benchmark
@@ -92,9 +92,9 @@ public class FourThreadBenchmark {
 
     /*public static void main(String[] args) throws InterruptedException {
         while (true) {
-            SimpleQueuesBenchmark benchmark = new SimpleQueuesBenchmark();
+            FourThreadBenchmark benchmark = new FourThreadBenchmark();
             benchmark.prepareValues();
-            benchmark.arrayQueue();
+            benchmark.ringBufferRouterMultiplexer();
 
             System.out.println("next");
         }

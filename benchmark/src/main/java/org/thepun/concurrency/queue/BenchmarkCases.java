@@ -37,7 +37,7 @@ class BenchmarkCases {
         return result;
     }
 
-    static long multipleProducersAndSingleConsumers(QueueHead<Long> queueHead, QueueTail<Long>[] queueTails, Long[] values, int count) throws
+    static long multipleProducersAndSingleConsumer(QueueHead<Long> queueHead, QueueTail<Long>[] queueTails, Long[] values, int count) throws
             InterruptedException {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch finishLatch = new CountDownLatch(1 + queueTails.length);

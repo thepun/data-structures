@@ -63,7 +63,7 @@ final class AlignedLong {
             if (current >= upperLimit) {
                 return -1;
             }
-        } while (!Atomic.compareAndSwapLong(this, valueOffset, current, current + 1L));
+        } while (!compareAndSwap(current, current + 1L));
 
         return current;
     }
