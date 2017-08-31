@@ -13,8 +13,6 @@ public final class RingBufferRouter<T> implements Router<T> {
     private final Object[] data;
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
-    private final AlignedLong readCounterForProducers;
-    private final AlignedLong writeCounterForConsumers;
 
     private RingBufferConsumer<T>[] consumers;
     private RingBufferProducer<T>[] producers;
@@ -28,9 +26,6 @@ public final class RingBufferRouter<T> implements Router<T> {
         data = new Object[bufferSize];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
-        readCounterForProducers = new AlignedLong();
-        writeCounterForConsumers = new AlignedLong();
-
         consumers = new RingBufferConsumer[0];
         producers = new RingBufferProducer[0];
     }
@@ -151,6 +146,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
         private long localReadCounter;
         private long localWriteCounter;
+
         private RingBufferConsumer<T>[] consumers;
 
         private RingBufferProducer(RingBufferRouter<T> parent) {
@@ -169,9 +165,11 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             long writeIndex = writeCounter.get();
             if (writeIndex >= readIndex + size) {
+                RingBufferConsumer<T>[] localConsumers = this.consumers;
+
                 readIndex = readCounter.get();
-                for (int i = 0; i < consumers.length; i++) {
-                    long localReadCounterFromConsumer = consumers[i].localReadCounter;
+                for (int i = 0; i < localConsumers.length; i++) {
+                    long localReadCounterFromConsumer = localConsumers[i].localReadCounter;
                     if (readIndex > localReadCounterFromConsumer) {
                         readIndex = localReadCounterFromConsumer;
                     }
@@ -179,6 +177,7 @@ public final class RingBufferRouter<T> implements Router<T> {
                 localReadCounter = readIndex;
 
                 if (writeIndex >= readIndex + size) {
+                    localWriteCounter = Long.MAX_VALUE;
                     return false;
                 }
             }
@@ -233,9 +232,11 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             long readIndex = readCounter.get();
             if (readIndex >= writeIndex) {
+                RingBufferProducer<T>[] localProducers = this.producers;
+
                 writeIndex = writeCounter.get();
-                for (int i = 0; i < producers.length; i++) {
-                    long localWriteCounterFromConsumer = producers[i].localWriteCounter;
+                for (int i = 0; i < localProducers.length; i++) {
+                    long localWriteCounterFromConsumer = localProducers[i].localWriteCounter;
                     if (writeIndex > localWriteCounterFromConsumer) {
                         writeIndex = localWriteCounterFromConsumer;
                     }
@@ -243,6 +244,7 @@ public final class RingBufferRouter<T> implements Router<T> {
                 localWriteCounter = writeIndex;
 
                 if (readIndex >= writeIndex) {
+                    localReadCounter = Long.MAX_VALUE;
                     return null;
                 }
             }
@@ -259,6 +261,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             int index = (int) readIndex % size;
             Object element = ArrayMemory.getObject(data, index);
+            Fence.load();
 
             localReadCounter = Long.MAX_VALUE;
             return (T) element;

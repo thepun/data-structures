@@ -129,13 +129,13 @@ public class FourThreadBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
-    /*public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
+        FourThreadBenchmark benchmark = new FourThreadBenchmark();
+
         while (true) {
-            FourThreadBenchmark benchmark = new FourThreadBenchmark();
             benchmark.prepareValues();
             benchmark.ringBufferRouterMultiplexer();
-
             System.out.println("next");
         }
-    }*/
+    }
 }
