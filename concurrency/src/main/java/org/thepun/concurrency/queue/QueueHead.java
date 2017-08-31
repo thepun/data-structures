@@ -4,7 +4,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Created by thepun on 20.08.17.
+ * Consumer's entry point interface.
+ *
+ * Provides very basic functionality to pop elements from a queue. Generally there is no limitations on whether an instance of the interface should be used
+ * only from specific thread but usually implementation specifics restrict such usage.
  */
 public interface QueueHead<T> {
 

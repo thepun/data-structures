@@ -5,6 +5,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.thepun.unsafe.ArrayMemory;
 
+
 public final class RingBufferBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     private final int size;

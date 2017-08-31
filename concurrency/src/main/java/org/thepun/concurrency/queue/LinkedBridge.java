@@ -6,8 +6,26 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.thepun.unsafe.ArrayMemory;
 
+/**
+ * Single producer / single consumer queue implementation based on linked list.
+ *
+ * GUARANTIES:
+ * 1. Ultra fast
+ * 2. Lock-free
+ * 3. Almost no atomic operations (only during buffer allocation once in ~1K elements)
+ * 4. FIFO order
+ * 5. push / pop crosses a memory barrier
+ * 6. Do not produce garbage
+ *
+ * LIMITATIONS:
+ * 1. Unbounded
+ * 2. No guaranties on behavior outside of initial producer/consumer threads
+ * 3. Latency can significantly plunge during buffer allocation (after each ~1K elements)
+ * 4. Works only with architecture with strong memory consistency (i.e. x86)
+ *
+ * @param <T> type of objects to store
+ */
 public final class LinkedBridge<T> implements QueueHead<T>, QueueTail<T> {
-
 
     private final AlignedLinkedNode head;
     private final AlignedLinkedNode tail;
@@ -122,6 +140,4 @@ public final class LinkedBridge<T> implements QueueHead<T>, QueueTail<T> {
             }
         }
     }
-
-
 }
