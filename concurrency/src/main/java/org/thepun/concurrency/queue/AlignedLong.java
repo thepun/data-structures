@@ -4,6 +4,13 @@ import org.thepun.unsafe.Atomic;
 import org.thepun.unsafe.ObjectMemoryLayout;
 import org.thepun.unsafe.Volatile;
 
+/**
+ * Internal class for storing long value aligned to cache lines for lesser false sharing.
+ *
+ * Variable that stores the value is not volatile. Use volatileGet / volatileSet methods to cross memory barriers.
+ *
+ * Provides Compare-and-Swap (CAS) operation.
+ */
 final class AlignedLong {
 
     private static final long valueOffset;
@@ -20,6 +27,7 @@ final class AlignedLong {
             before9, before10, before11,
             before12, before13;
 
+    // non-volatile field to store current value
     private long value;
 
     // 56 bytes gap
@@ -33,41 +41,49 @@ final class AlignedLong {
             after13, after14, after15;
 
 
+    /**
+     * Getter for current value
+     *
+     * @return current value
+     */
     public long get() {
         return value;
     }
 
+    /**
+     * Setter for current value
+     *
+     * @param newValue value to set
+     */
     public void set(long newValue) {
         value = newValue;
     }
 
+    /**
+     * Getter for current value which crosses memory barrier
+     *
+     * @return latest current value
+     */
     public long volatileGet() {
         return Volatile.getLong(this, valueOffset);
     }
 
+    /**
+     * Setter for current value which crosses memory barrier
+     *
+     * @param newValue value to set
+     */
     public void volatileSet(long newValue) {
         Volatile.setLong(this, valueOffset, newValue);
     }
 
-    public void increment() {
-        long current;
-        do {
-            current = value;
-        } while (!Atomic.compareAndSwapLong(this, valueOffset, current, current + 1L));
-    }
-
-    public long getAndIncrement(long upperLimit) {
-        long current;
-        do {
-            current = value;
-            if (current >= upperLimit) {
-                return -1;
-            }
-        } while (!compareAndSwap(current, current + 1L));
-
-        return current;
-    }
-
+    /**
+     * Synchronously change current value. It is common CAS operation that provides relevant memory consistency guaranties.
+     *
+     * @param expectedValue value that is stored in memory
+     * @param newValue value to change to
+     * @return true on successful operation and false otherwise
+     */
     public boolean compareAndSwap(long expectedValue, long newValue) {
         return Atomic.compareAndSwapLong(this, valueOffset, expectedValue, newValue);
     }

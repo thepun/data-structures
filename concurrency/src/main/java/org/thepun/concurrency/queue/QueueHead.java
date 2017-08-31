@@ -7,7 +7,7 @@ import java.util.concurrent.TimeoutException;
  * Consumer's entry point interface.
  *
  * Provides very basic functionality to pop elements from a queue. Generally there is no limitations on whether an instance of the interface should be used
- * only from specific thread but usually implementation specifics restrict such usage.
+ * from a strictly particular thread but usually implementation details apply such limitations.
  */
 public interface QueueHead<T> {
 
