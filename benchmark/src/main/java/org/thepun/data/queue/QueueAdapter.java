@@ -1,4 +1,4 @@
-package org.thepun.concurrency.queue;
+package org.thepun.data.queue;
 
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;

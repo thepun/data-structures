@@ -1,4 +1,4 @@
-package org.thepun.concurrency.queue;
+package org.thepun.data.queue;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;

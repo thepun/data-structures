@@ -1,4 +1,4 @@
-rootProject.name = 'queue'
+rootProject.name = 'data-structures'
 
-include 'concurrency', 'benchmark'
+include 'benchmark'
 
