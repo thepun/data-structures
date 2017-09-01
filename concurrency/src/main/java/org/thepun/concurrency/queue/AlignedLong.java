@@ -1,8 +1,7 @@
 package org.thepun.concurrency.queue;
 
-import org.thepun.unsafe.Atomic;
+import org.thepun.unsafe.ObjectMemory;
 import org.thepun.unsafe.ObjectMemoryLayout;
-import org.thepun.unsafe.Volatile;
 
 /**
  * Internal class for storing long value aligned to cache lines for lesser false sharing.
@@ -15,7 +14,7 @@ final class AlignedLong {
 
     private static final long valueOffset;
     static {
-        valueOffset = ObjectMemoryLayout.getFieldMemoryOffset(AlignedLong.class, "value");
+        valueOffset = ObjectMemoryLayout.getFieldOffset(AlignedLong.class, "value");
     }
 
 
@@ -65,7 +64,7 @@ final class AlignedLong {
      * @return latest current value
      */
     public long volatileGet() {
-        return Volatile.getLong(this, valueOffset);
+        return ObjectMemory.getLongVolatile(this, valueOffset);
     }
 
     /**
@@ -74,7 +73,7 @@ final class AlignedLong {
      * @param newValue value to set
      */
     public void volatileSet(long newValue) {
-        Volatile.setLong(this, valueOffset, newValue);
+        ObjectMemory.setLongVolatile(this, valueOffset, newValue);
     }
 
     /**
@@ -85,6 +84,6 @@ final class AlignedLong {
      * @return true on successful operation and false otherwise
      */
     public boolean compareAndSwap(long expectedValue, long newValue) {
-        return Atomic.compareAndSwapLong(this, valueOffset, expectedValue, newValue);
+        return ObjectMemory.compareAndSwapLong(this, valueOffset, expectedValue, newValue);
     }
 }

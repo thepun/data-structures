@@ -11,7 +11,7 @@ import org.thepun.unsafe.ArrayMemory;
  *
  * GUARANTIES:
  * 1. Ultra fast
- * 2. Lock-free
+ * 2. Wait-free
  * 3. Almost no atomic operations (only during buffer allocation once in ~1K elements)
  * 4. FIFO order
  * 5. push / pop crosses a memory barrier

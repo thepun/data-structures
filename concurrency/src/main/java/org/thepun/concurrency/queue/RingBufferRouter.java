@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.thepun.unsafe.ArrayMemory;
-import org.thepun.unsafe.Fence;
+import org.thepun.unsafe.MemoryFence;
 
 public final class RingBufferRouter<T> implements Router<T> {
 
@@ -117,21 +117,21 @@ public final class RingBufferRouter<T> implements Router<T> {
     }
 
     private void updateProducers(RingBufferProducer<T>[] newProducers) {
-        Fence.full();
+        MemoryFence.full();
         producers = newProducers;
         for (int i = 0; i < consumers.length; i++) {
             consumers[i].producers = newProducers;
         }
-        Fence.full();
+        MemoryFence.full();
     }
 
     private void updateConsumers(RingBufferConsumer<T>[] newConsumers) {
-        Fence.full();
+        MemoryFence.full();
         consumers = newConsumers;
         for (int i = 0; i < producers.length; i++) {
             producers[i].consumers = newConsumers;
         }
-        Fence.full();
+        MemoryFence.full();
     }
 
 
@@ -194,7 +194,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             int index = (int) writeIndex % size;
             ArrayMemory.setObject(data, index, element);
-            Fence.store();
+            MemoryFence.store();
 
             localWriteCounter = Long.MAX_VALUE;
             return true;
@@ -261,7 +261,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             int index = (int) readIndex % size;
             Object element = ArrayMemory.getObject(data, index);
-            Fence.load();
+            MemoryFence.load();
 
             localReadCounter = Long.MAX_VALUE;
             return (T) element;
