@@ -13,7 +13,6 @@ public final class RingBufferRouterWithXADD<T> implements Router<T> {
     private final Object[] data;
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
-    private final AlignedLong writeQueueCounter;
 
     private RingBufferConsumer<T>[] consumers;
     private RingBufferProducer<T>[] producers;
@@ -27,7 +26,7 @@ public final class RingBufferRouterWithXADD<T> implements Router<T> {
         data = new Object[bufferSize];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
-        writeQueueCounter = new AlignedLong();
+        //writeQueueCounter = new AlignedLong();
         consumers = new RingBufferConsumer[0];
         producers = new RingBufferProducer[0];
     }
@@ -145,7 +144,6 @@ public final class RingBufferRouterWithXADD<T> implements Router<T> {
         private final Object[] data;
         private final AlignedLong readCounter;
         private final AlignedLong writeCounter;
-        private final AlignedLong writeQueueCounter;
 
         private long localReadCounter;
         private long localWriteCounter;
@@ -162,20 +160,17 @@ public final class RingBufferRouterWithXADD<T> implements Router<T> {
             consumers = parent.consumers;
             readCounter = parent.readCounter;
             writeCounter = parent.writeCounter;
-            writeQueueCounter = parent.writeQueueCounter;
         }
 
         @Override
         public boolean addToTail(T element) {
-            long readIndex = localReadCounter;
-
-            long writeIndex = localWriteCounter;
-            if (writeIndex == Long.MAX_VALUE) {
-                writeIndex = writeQueueCounter.getAndIncrement();
-                localWriteCounter = writeIndex;
+            if (localWriteCounter == Long.MAX_VALUE) {
+                localWriteCounter = writeCounter.get();
+                localWriteCounter = writeCounter.getAndIncrement();
             }
 
-            if (writeIndex >= readIndex + size) {
+            long readIndex = localReadCounter;
+            if (localWriteCounter >= readIndex + size) {
                 RingBufferConsumer<T>[] localConsumers = this.consumers;
 
                 readIndex = readCounter.get();
@@ -187,15 +182,15 @@ public final class RingBufferRouterWithXADD<T> implements Router<T> {
                 }
                 localReadCounter = readIndex;
 
-                if (writeIndex >= readIndex + size) {
+                if (localWriteCounter >= readIndex + size) {
                     return false;
                 }
             }
 
-            int index = (int) writeIndex % size;
+            int index = (int) localWriteCounter % size;
             ArrayMemory.setObject(data, index, element);
+            MemoryFence.store();
 
-            writeCounter.getAndIncrement();
             localWriteCounter = Long.MAX_VALUE;
             return true;
         }

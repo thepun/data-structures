@@ -106,18 +106,6 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
-    public long roundRobinDemultiplexer() throws InterruptedException {
-        RoundRobinLinkedDemultiplexer<Long> queue = new RoundRobinLinkedDemultiplexer<>();
-
-        QueueHead<Long>[] queueHeads = new QueueHead[3];
-        queueHeads[0] = queue.createConsumer();
-        queueHeads[1] = queue.createConsumer();
-        queueHeads[2] = queue.createConsumer();
-
-        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
-    }
-
-    @Benchmark
     public long arrayBlockingQueueMultiplexer() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
 
@@ -189,12 +177,12 @@ public class FourThreadBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
-   /* public static void main(String[] args) throws InterruptedException {
+   /*public static void main(String[] args) throws InterruptedException {
         FourThreadBenchmark benchmark = new FourThreadBenchmark();
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.ringBufferRouterWithXADDDemultiplexer();
+            benchmark.ringBufferRouterWithXADDMultiplexer();
             System.out.println("next");
         }
     }*/

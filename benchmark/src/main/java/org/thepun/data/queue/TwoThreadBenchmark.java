@@ -1,5 +1,9 @@
 package org.thepun.data.queue;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
+
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -11,10 +15,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.LinkedTransferQueue;
 
 
 @State(Scope.Benchmark)
@@ -67,12 +67,6 @@ public class TwoThreadBenchmark {
     public long roundRobinMultiplexer() throws InterruptedException {
         RoundRobinLinkedMultiplexer<Long> queue = new RoundRobinLinkedMultiplexer<>();
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue.createProducer(), values, 100_000_000);
-    }
-
-    @Benchmark
-    public long roundRobinDemultiplexer() throws InterruptedException {
-        RoundRobinLinkedDemultiplexer<Long> queue = new RoundRobinLinkedDemultiplexer<>();
-        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue, values, 100_000_000);
     }
 
     @Benchmark
