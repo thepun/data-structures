@@ -58,6 +58,12 @@ public class TwoThreadBenchmark {
     }
 
     @Benchmark
+    public long ringBufferRouterWithXADD() throws InterruptedException {
+        RingBufferRouterWithXADD<Long> queue = new RingBufferRouterWithXADD<>(1000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long roundRobinMultiplexer() throws InterruptedException {
         RoundRobinLinkedMultiplexer<Long> queue = new RoundRobinLinkedMultiplexer<>();
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue.createProducer(), values, 100_000_000);

@@ -52,8 +52,32 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
+    public long ringBufferRouterWithXADDMultiplexer() throws InterruptedException {
+        RingBufferRouterWithXADD<Long> queue = new RingBufferRouterWithXADD<>(10000);
+
+        QueueTail<Long>[] queueTails = new QueueTail[3];
+        queueTails[0] = queue.createProducer();
+        queueTails[1] = queue.createProducer();
+        queueTails[2] = queue.createProducer();
+
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue.createConsumer(), queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
     public long ringBufferRouterDemultiplexer() throws InterruptedException {
         RingBufferRouter<Long> queue = new RingBufferRouter<>(10000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+        queueHeads[2] = queue.createConsumer();
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
+    public long ringBufferRouterWithXADDDemultiplexer() throws InterruptedException {
+        RingBufferRouterWithXADD<Long> queue = new RingBufferRouterWithXADD<>(10000);
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -94,7 +118,19 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
-    public long arrayBlockingQueue() throws InterruptedException {
+    public long arrayBlockingQueueMultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
+
+        QueueTail<Long>[] queueTails = new QueueTail[3];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+        queueTails[2] = queue;
+
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long arrayBlockingQueueDemultiplexer() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
@@ -106,7 +142,19 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
-    public long linkedBlockingQueue() throws InterruptedException {
+    public long linkedBlockingQueueMultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedBlockingQueue<Long>(1000));
+
+        QueueTail<Long>[] queueTails = new QueueTail[3];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+        queueTails[2] = queue;
+
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long linkedBlockingQueueDemultiplexer() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedBlockingQueue<>());
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
@@ -118,7 +166,19 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
-    public long linkedTransferQueue() throws InterruptedException {
+    public long linkedTransferQueueMultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<Long>());
+
+        QueueTail<Long>[] queueTails = new QueueTail[3];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+        queueTails[2] = queue;
+
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long linkedTransferQueueDemultiplexer() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<>());
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
@@ -129,13 +189,13 @@ public class FourThreadBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
-    public static void main(String[] args) throws InterruptedException {
+   /* public static void main(String[] args) throws InterruptedException {
         FourThreadBenchmark benchmark = new FourThreadBenchmark();
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.ringBufferRouterMultiplexer();
+            benchmark.ringBufferRouterWithXADDDemultiplexer();
             System.out.println("next");
         }
-    }
+    }*/
 }

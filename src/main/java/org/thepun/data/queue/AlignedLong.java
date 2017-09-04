@@ -86,4 +86,13 @@ final class AlignedLong {
     public boolean compareAndSwap(long expectedValue, long newValue) {
         return ObjectMemory.compareAndSwapLong(this, valueOffset, expectedValue, newValue);
     }
+
+    /**
+     * Synchronously increment value and return previous
+     *
+     * @return previous value
+     */
+    public long getAndIncrement() {
+        return ObjectMemory.getAndIncrementLong(this, valueOffset, 1L);
+    }
 }
