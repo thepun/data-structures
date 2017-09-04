@@ -80,12 +80,12 @@ public class TwoThreadBenchmark {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<>());
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
-
-    /*public static void main(String[] args) throws InterruptedException {
+/*
+    public static void main(String[] args) throws InterruptedException {
         while (true) {
-            SimpleQueuesBenchmark benchmark = new SimpleQueuesBenchmark();
+            TwoThreadBenchmark benchmark = new TwoThreadBenchmark();
             benchmark.prepareValues();
-            benchmark.arrayQueue();
+            benchmark.ringBufferRouterAligned();
 
             System.out.println("next");
         }
