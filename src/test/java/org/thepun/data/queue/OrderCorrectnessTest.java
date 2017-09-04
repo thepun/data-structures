@@ -107,23 +107,17 @@ public class OrderCorrectnessTest {
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
 
-        /*LinkedBridge<Long> longSPSCSplittedLinkedQueue = new LinkedBridge<>();
+        LinkedBridge<Long> longSPSCSplittedLinkedQueue = new LinkedBridge<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
         RoundRobinLinkedMultiplexer<Long> longLinkedArrayMultiplexer = new RoundRobinLinkedMultiplexer<>();
         list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
-        RoundRobinLinkedDemultiplexer<Long> longLinkedArrayDemultiplexer = new RoundRobinLinkedDemultiplexer<>();
-        list.add(new Object[] {longLinkedArrayDemultiplexer, longLinkedArrayDemultiplexer.createConsumer()});
-
         RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
         list.add(new Object[] {arrayBridge, arrayBridge});
 
         RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
-        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});*/
-
-        RingBufferRouterWithXADD<Long> arrayQueueWithXADD = new RingBufferRouterWithXADD<>(10000000);
-        list.add(new Object[] {arrayQueueWithXADD.createProducer(), arrayQueueWithXADD.createConsumer()});
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
         return list;
     }

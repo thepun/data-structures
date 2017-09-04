@@ -59,4 +59,40 @@ class BenchmarkCases {
 
         return consumerThread.getResult();
     }
+
+    static long multipleProducersAndMultipleConsumer(QueueHead<Long>[] queueHeads, QueueTail<Long>[] queueTails, Long[] values, int count) throws
+            InterruptedException {
+        if (count / queueTails.length * queueTails.length != count / queueHeads.length * queueHeads.length) {
+            throw new IllegalArgumentException("count should be divided equally by consumers and producers");
+        }
+
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch finishLatch = new CountDownLatch(1 + queueTails.length);
+
+        ProducerThraed[] producerThraeds = new ProducerThraed[queueTails.length];
+        for (int i = 0; i < producerThraeds.length; i++) {
+            producerThraeds[i] = new ProducerThraed(startLatch, finishLatch, queueTails[i], values, count / queueTails.length);
+        }
+
+        ConsumerThread[] consumerThreads = new ConsumerThread[queueHeads.length];
+        for (int i = 0; i < consumerThreads.length; i++) {
+            consumerThreads[i] = new ConsumerThread(startLatch, finishLatch, queueHeads[i], count / queueHeads.length);
+        }
+
+        for (int i = 0; i < producerThraeds.length; i++) {
+            producerThraeds[i].start();
+        }
+        for (int i = 0; i < consumerThreads.length; i++) {
+            consumerThreads[i].start();
+        }
+
+        startLatch.countDown();
+        finishLatch.await();
+
+        long result = 0;
+        for (int i = 0; i < consumerThreads.length; i++) {
+            result =+ consumerThreads[i].getResult();
+        }
+        return result;
+    }
 }

@@ -1,21 +1,18 @@
 package org.thepun.data.queue;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.thepun.unsafe.ArrayMemory;
 import org.thepun.unsafe.MemoryFence;
 
-public final class RingBufferRouter<T> implements Router<T> {
+public final class RingBufferRouter<T> extends AbstractRouter<T> {
 
     private final int size;
     private final Object[] data;
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
 
-    private RingBufferConsumer<T>[] consumers;
-    private RingBufferProducer<T>[] producers;
 
     public RingBufferRouter(int bufferSize) {
         if (bufferSize < 1) {
@@ -26,118 +23,44 @@ public final class RingBufferRouter<T> implements Router<T> {
         data = new Object[bufferSize];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
-        consumers = new RingBufferConsumer[0];
-        producers = new RingBufferProducer[0];
     }
 
     @Override
-    public synchronized QueueTail<T> createProducer() {
-        RingBufferProducer<T>[] oldProducers = producers;
-        RingBufferProducer<T>[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
-        RingBufferProducer<T> producer = new RingBufferProducer<>(this);
-        newProducers[oldProducers.length] = producer;
-        updateProducers(newProducers);
-        return producer;
+    protected AbstractProducer<T>[] createProducerArray(int length) {
+        return new RingBufferProducer[length];
     }
 
     @Override
-    public synchronized QueueHead<T> createConsumer() {
-        RingBufferConsumer<T>[] oldConsumers = consumers;
-        RingBufferConsumer<T>[] newConsumers = Arrays.copyOf(oldConsumers, oldConsumers.length + 1);
-        RingBufferConsumer<T> consumer = new RingBufferConsumer<>(this);
-        newConsumers[oldConsumers.length] = consumer;
-        updateConsumers(newConsumers);
-        return consumer;
+    protected AbstractConsumer<T>[] createConsumerArray(int length) {
+        return new RingBufferConsumer[length];
     }
 
     @Override
-    public synchronized void destroyProducer(QueueTail<T> producer) {
-        if (!(producer instanceof RingBufferProducer)) {
-            throw new IllegalArgumentException("Wrong producer");
-        }
-
-        RingBufferProducer<T> producerSubqueue = (RingBufferProducer<T>) producer;
-        if (producerSubqueue.parent != this) {
-            throw new IllegalArgumentException("Producer from another router");
-        }
-
-        RingBufferProducer<T>[] newProducers;
-        RingBufferProducer<T>[] oldProducers;
-
-        oldProducers = producers;
-        int index = -1;
-        for (int i = 0; i < oldProducers.length; i++) {
-            if (oldProducers[i] == producer) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index == -1) {
-            throw new IllegalArgumentException("Producer not found");
-        }
-
-        newProducers = new RingBufferProducer[oldProducers.length - 1];
-        System.arraycopy(oldProducers, 0, newProducers, 0, index);
-        System.arraycopy(oldProducers, index + 1, newProducers, index + 1 - 1, oldProducers.length - (index + 1));
-        updateProducers(newProducers);
+    protected RingBufferProducer<T> createProducerInstance() {
+        return new RingBufferProducer<>(this);
     }
 
     @Override
-    public synchronized void destroyConsumer(QueueHead<T> consumer) {
-        if (!(consumer instanceof RingBufferConsumer)) {
-            throw new IllegalArgumentException("Wrong consumer");
-        }
-
-        RingBufferConsumer<T> producerSubqueue = (RingBufferConsumer<T>) consumer;
-        if (producerSubqueue.parent != this) {
-            throw new IllegalArgumentException("Consumer from another router");
-        }
-
-        RingBufferConsumer<T>[] newConsumers;
-        RingBufferConsumer<T>[] oldConsumers;
-
-        oldConsumers = consumers;
-        int index = -1;
-        for (int i = 0; i < oldConsumers.length; i++) {
-            if (oldConsumers[i] == consumer) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index == -1) {
-            throw new IllegalArgumentException("Consumer not found");
-        }
-
-        newConsumers = new RingBufferConsumer[oldConsumers.length - 1];
-        System.arraycopy(oldConsumers, 0, newConsumers, 0, index);
-        System.arraycopy(oldConsumers, index + 1, newConsumers, index + 1 - 1, oldConsumers.length - (index + 1));
-        updateConsumers(newConsumers);
+    protected RingBufferConsumer<T> createConsumerInstance() {
+        return new RingBufferConsumer<>(this);
     }
 
-    private void updateProducers(RingBufferProducer<T>[] newProducers) {
-        MemoryFence.full();
-        producers = newProducers;
-        for (int i = 0; i < consumers.length; i++) {
-            consumers[i].producers = newProducers;
+    @Override
+    protected void afterProducerUpdate() {
+        for (AbstractConsumer<T> consumer : consumers) {
+            ((RingBufferConsumer<T>) consumer).producers = (RingBufferProducer<T>[]) producers;
         }
-        MemoryFence.full();
     }
 
-    private void updateConsumers(RingBufferConsumer<T>[] newConsumers) {
-        MemoryFence.full();
-        consumers = newConsumers;
-        for (int i = 0; i < producers.length; i++) {
-            producers[i].consumers = newConsumers;
+    @Override
+    protected void afterConsumerUpdate() {
+        for (AbstractProducer<T> producer : producers) {
+            ((RingBufferProducer<T>) producer).consumers = (RingBufferConsumer<T>[]) consumers;
         }
-        MemoryFence.full();
     }
 
 
-    private static final class RingBufferProducer<T> implements QueueTail<T> {
-
-        private final RingBufferRouter<T> parent;
+    private static final class RingBufferProducer<T> extends AbstractProducer<T> {
 
         private final int size;
         private final Object[] data;
@@ -150,13 +73,13 @@ public final class RingBufferRouter<T> implements Router<T> {
         private RingBufferConsumer<T>[] consumers;
 
         private RingBufferProducer(RingBufferRouter<T> parent) {
-            this.parent = parent;
+            super(parent);
 
             size = parent.size;
             data = parent.data;
-            consumers = parent.consumers;
             readCounter = parent.readCounter;
             writeCounter = parent.writeCounter;
+            consumers = (RingBufferConsumer<T>[]) parent.consumers;
         }
 
         @Override
@@ -202,9 +125,7 @@ public final class RingBufferRouter<T> implements Router<T> {
     }
 
 
-    private static final class RingBufferConsumer<T> implements QueueHead<T> {
-
-        private final RingBufferRouter<T> parent;
+    private static final class RingBufferConsumer<T> extends AbstractConsumer<T> {
 
         private final int size;
         private final Object[] data;
@@ -217,13 +138,13 @@ public final class RingBufferRouter<T> implements Router<T> {
         private RingBufferProducer<T>[] producers;
 
         private RingBufferConsumer(RingBufferRouter<T> parent) {
-            this.parent = parent;
+            super(parent);
 
             size = parent.size;
             data = parent.data;
-            producers = parent.producers;
             readCounter = parent.readCounter;
             writeCounter = parent.writeCounter;
+            producers = (RingBufferProducer<T>[]) parent.producers;
         }
 
         @Override
