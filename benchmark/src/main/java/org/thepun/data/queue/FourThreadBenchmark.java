@@ -1,5 +1,9 @@
 package org.thepun.data.queue;
 
+import org.jctools.queues.ConcurrentCircularArrayQueue;
+import org.jctools.queues.MpmcArrayQueue;
+import org.jctools.queues.MpscArrayQueue;
+import org.jctools.queues.SpmcArrayQueue;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -13,6 +17,7 @@ import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
@@ -169,6 +174,45 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
+    public long concurrentLinkedQueueMultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ConcurrentLinkedQueue<>());
+
+        QueueTail<Long>[] queueTails = new QueueTail[3];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+        queueTails[2] = queue;
+
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long concurrentLinkedQueueDemultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ConcurrentLinkedQueue<>());
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+        queueHeads[2] = queue;
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long concurrentLinkedQueueSimetric() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ConcurrentLinkedQueue<>());
+
+        QueueHead<Long>[] queueHeads = new QueueHead[2];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+
+        QueueTail<Long>[] queueTails = new QueueTail[2];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+
+        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
     public long linkedTransferQueueMultiplexer() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<Long>());
 
@@ -195,6 +239,45 @@ public class FourThreadBenchmark {
     @Benchmark
     public long linkedTransferQueueSimetric() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<>());
+
+        QueueHead<Long>[] queueHeads = new QueueHead[2];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+
+        QueueTail<Long>[] queueTails = new QueueTail[2];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+
+        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long mpscArrayQueueMultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new MpscArrayQueue<>(1000));
+
+        QueueTail<Long>[] queueTails = new QueueTail[3];
+        queueTails[0] = queue;
+        queueTails[1] = queue;
+        queueTails[2] = queue;
+
+        return BenchmarkCases.multipleProducersAndSingleConsumer(queue, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spmcQueueDemultiplexer() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpmcArrayQueue<>(1000));
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue;
+        queueHeads[1] = queue;
+        queueHeads[2] = queue;
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long mpmcArrayQueueSimetric() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcArrayQueue<>(1000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[2];
         queueHeads[0] = queue;

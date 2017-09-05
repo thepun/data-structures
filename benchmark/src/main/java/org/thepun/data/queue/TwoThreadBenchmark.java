@@ -4,6 +4,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
+import org.jctools.queues.SpscArrayQueue;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -78,6 +79,12 @@ public class TwoThreadBenchmark {
     @Benchmark
     public long linkedTransferQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedTransferQueue<>());
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscArrayQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscArrayQueue<>(1000));
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 /*
