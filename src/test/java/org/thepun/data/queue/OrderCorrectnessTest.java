@@ -107,7 +107,7 @@ public class OrderCorrectnessTest {
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
 
-        LinkedBridge<Long> longSPSCSplittedLinkedQueue = new LinkedBridge<>();
+        /*LinkedChunkBridge<Long> longSPSCSplittedLinkedQueue = new LinkedChunkBridge<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
         RoundRobinLinkedMultiplexer<Long> longLinkedArrayMultiplexer = new RoundRobinLinkedMultiplexer<>();
@@ -117,7 +117,10 @@ public class OrderCorrectnessTest {
         list.add(new Object[] {arrayBridge, arrayBridge});
 
         RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
-        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});*/
+
+        RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
+        list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});
 
         return list;
     }

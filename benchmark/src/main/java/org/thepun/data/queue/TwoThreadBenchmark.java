@@ -5,6 +5,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
 import org.jctools.queues.SpscArrayQueue;
+import org.jctools.queues.SpscChunkedArrayQueue;
+import org.jctools.queues.SpscGrowableArrayQueue;
+import org.jctools.queues.SpscLinkedQueue;
+import org.jctools.queues.SpscUnboundedArrayQueue;
+import org.jctools.queues.atomic.SpscAtomicArrayQueue;
+import org.jctools.queues.atomic.SpscLinkedAtomicQueue;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -42,7 +48,7 @@ public class TwoThreadBenchmark {
 
     @Benchmark
     public long linkedBridge() throws InterruptedException {
-        LinkedBridge<Long> queue = new LinkedBridge<>();
+        LinkedChunkBridge<Long> queue = new LinkedChunkBridge<>();
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 
@@ -56,6 +62,12 @@ public class TwoThreadBenchmark {
     public long ringBufferRouter() throws InterruptedException {
         RingBufferRouter<Long> queue = new RingBufferRouter<>(1000);
         return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
+    public long ringBufferDemultiplexer() throws InterruptedException {
+        RingBufferDemultiplexer<Long> queue = new RingBufferDemultiplexer<>(1000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue, values, 100_000_000);
     }
 
     @Benchmark
@@ -85,6 +97,42 @@ public class TwoThreadBenchmark {
     @Benchmark
     public long spscArrayQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new SpscArrayQueue<>(1000));
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscChunkedArrayQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscChunkedArrayQueue<>(1000));
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscGrowableArrayQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscGrowableArrayQueue<>(1000));
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscUnboundedArrayQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscUnboundedArrayQueue<>(1000));
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscAtomicArrayQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscAtomicArrayQueue<>(1000));
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscAtomicLinkedQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscLinkedAtomicQueue<>());
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long spscLinkedQueue() throws InterruptedException {
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpscLinkedQueue<>());
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 /*

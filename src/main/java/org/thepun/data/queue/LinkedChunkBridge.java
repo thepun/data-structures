@@ -25,13 +25,13 @@ import org.thepun.unsafe.ArrayMemory;
  *
  * @param <T> type of objects to store
  */
-public final class LinkedBridge<T> implements QueueHead<T>, QueueTail<T> {
+public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     private final AlignedLinkedNode head;
     private final AlignedLinkedNode tail;
     private final AtomicReference<Object[]> emptyChain;
 
-    public LinkedBridge() {
+    public LinkedChunkBridge() {
         Object[] firstBunch = new Object[QueueConstants.LINKED_BUNCH_SIZE];
         head = new AlignedLinkedNode();
         tail = new AlignedLinkedNode();
