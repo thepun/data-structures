@@ -14,8 +14,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
 
-    private long localReadCounter;
-
+    private long producerReadCounter;
     private RingBufferConsumer<T>[] consumers;
 
     public RingBufferDemultiplexer(int bufferSize) {
@@ -77,36 +76,36 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
 
     @Override
     public boolean addToTail(T element) {
-        long readIndex = localReadCounter;
+        AlignedLong localWriteCounter = writeCounter;
 
-        long writeIndex = writeCounter.get();
+        long readIndex = producerReadCounter;
+        long writeIndex = localWriteCounter.get();
         long writeIndexMinusSize = writeIndex - size;
-
         if (writeIndexMinusSize >= readIndex) {
             RingBufferConsumer<T>[] localConsumers = consumers;
             int length = localConsumers.length;
 
             readIndex = readCounter.get();
             for (int i = 0; i < length; i++) {
-                long localReadCounterFromConsumer = localConsumers[i].localReadCounter.get();
+                long localReadCounterFromConsumer = localConsumers[i].consumerReadCounter.get();
                 if (readIndex > localReadCounterFromConsumer) {
                     readIndex = localReadCounterFromConsumer;
                 }
             }
-            localReadCounter = readIndex;
+            producerReadCounter = readIndex;
 
             if (writeIndexMinusSize >= readIndex) {
                 return false;
             }
         } else {
-            localReadCounter = readIndex + 1;
+            producerReadCounter = readIndex + 1;
         }
 
         int index = (int) writeIndex % size;
         ArrayMemory.setObject(data, index, element);
         MemoryFence.store();
 
-        writeCounter.set(writeIndex + 1);
+        localWriteCounter.set(writeIndex + 1);
         return true;
     }
 
@@ -119,7 +118,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
         private final Object[] data;
         private final AlignedLong readCounter;
         private final AlignedLong writeCounter;
-        private final AlignedLong localReadCounter;
+        private final AlignedLong consumerReadCounter;
 
         private RingBufferConsumer(RingBufferDemultiplexer<T> parent) {
             this.parent = parent;
@@ -129,37 +128,37 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
             readCounter = parent.readCounter;
             writeCounter = parent.writeCounter;
 
-            localReadCounter = new AlignedLong();
+            consumerReadCounter = new AlignedLong();
         }
 
         @Override
         public T removeFromHead() {
-            long writeIndex = writeCounter.get();
+            AlignedLong localReadCounter = readCounter;
+            AlignedLong localConsumerReadCounter = consumerReadCounter;
 
-            long readIndex = readCounter.get();
+            long writeIndex = writeCounter.get();
+            long readIndex = localReadCounter.get();
             if (readIndex >= writeIndex) {
-                localReadCounter.set(Long.MAX_VALUE);
+                localConsumerReadCounter.set(Long.MAX_VALUE);
                 return null;
             }
 
-            MemoryFence.load();
-            int index = (int) readIndex % size;
-            Object element = ArrayMemory.getObject(data, index);
-
-            localReadCounter.set(readIndex);
-            while (!readCounter.compareAndSwap(readIndex, readIndex + 1)) {
-                readIndex = readCounter.get();
+            localConsumerReadCounter.set(readIndex);
+            while (!localReadCounter.compareAndSwap(readIndex, readIndex + 1)) {
+                readIndex = localReadCounter.get();
                 //writeIndex = writeCounter.get();
 
                 if (readIndex >= writeIndex) {
-                    localReadCounter.set(Long.MAX_VALUE);
+                    localConsumerReadCounter.set(Long.MAX_VALUE);
                     return null;
                 }
             }
 
-            //MemoryFence.load();
+            int index = (int) readIndex % size;
+            Object element = ArrayMemory.getObject(data, index);
+            MemoryFence.load();
 
-            localReadCounter.set(Long.MAX_VALUE);
+            localConsumerReadCounter.set(Long.MAX_VALUE);
             return (T) element;
         }
 

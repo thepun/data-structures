@@ -72,7 +72,7 @@ public class TwoThreadBenchmark {
 
     @Benchmark
     public long roundRobinMultiplexer() throws InterruptedException {
-        RoundRobinLinkedMultiplexer<Long> queue = new RoundRobinLinkedMultiplexer<>();
+        UnfairLinkedChunkMultiplexer<Long> queue = new UnfairLinkedChunkMultiplexer<>();
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue.createProducer(), values, 100_000_000);
     }
 
@@ -135,14 +135,14 @@ public class TwoThreadBenchmark {
         QueueAdapter<Long> queue = new QueueAdapter<>(new SpscLinkedQueue<>());
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
-/*
+
     public static void main(String[] args) throws InterruptedException {
         while (true) {
             TwoThreadBenchmark benchmark = new TwoThreadBenchmark();
             benchmark.prepareValues();
-            benchmark.ringBufferRouterAligned();
+            benchmark.ringBufferDemultiplexer();
 
             System.out.println("next");
         }
-    }*/
+    }
 }

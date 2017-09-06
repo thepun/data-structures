@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by thepun on 19.08.17.
  */
 @SuppressWarnings("unchecked")
-public final class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
+public final class UnfairLinkedChunkMultiplexer<T> implements Multiplexer<T> {
 
     // TODO: refactor constants
     private static final int BUNCH_SIZE = 1024;
@@ -24,7 +24,7 @@ public final class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
     private int nextProducerIndex;
     private ProducerSubqueue<T>[] producers;
 
-    public RoundRobinLinkedMultiplexer() {
+    public UnfairLinkedChunkMultiplexer() {
         producers = new ProducerSubqueue[0];
         nextProducerIndex = 0;
     }
@@ -133,7 +133,7 @@ public final class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
 
     private static final class ProducerSubqueue<T> implements QueueTail<T> {
 
-        private final RoundRobinLinkedMultiplexer<T> parent;
+        private final UnfairLinkedChunkMultiplexer<T> parent;
 
         // TODO: use aligned node
         private int consumerIndex;
@@ -146,7 +146,7 @@ public final class RoundRobinLinkedMultiplexer<T> implements Multiplexer<T> {
 
         private final AtomicReference<Object[]> emptyChain;
 
-        private ProducerSubqueue(RoundRobinLinkedMultiplexer<T> parent) {
+        private ProducerSubqueue(UnfairLinkedChunkMultiplexer<T> parent) {
             this.parent = parent;
 
             Object[] firstBunch = new Object[BUNCH_SIZE];

@@ -7,7 +7,6 @@ import java.util.concurrent.LinkedTransferQueue;
 
 import org.jctools.queues.MpmcArrayQueue;
 import org.jctools.queues.MpscArrayQueue;
-import org.jctools.queues.SpmcArrayQueue;
 import org.jctools.queues.atomic.MpmcAtomicArrayQueue;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -58,7 +57,7 @@ public class FourThreadMultiplexerBenchmark {
 
     @Benchmark
     public long roundRobin() throws InterruptedException {
-        RoundRobinLinkedMultiplexer<Long> queue = new RoundRobinLinkedMultiplexer<>();
+        UnfairLinkedChunkMultiplexer<Long> queue = new UnfairLinkedChunkMultiplexer<>();
 
         QueueTail<Long>[] queueTails = new QueueTail[3];
         queueTails[0] = queue.createProducer();
