@@ -1,8 +1,6 @@
 package org.thepun.data.queue;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -122,12 +120,6 @@ public final class UnfairLinkedChunkMultiplexer<T> implements Multiplexer<T> {
 
             producerIndex++;
         }
-    }
-
-    @Override
-    public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
-        // TODO: implement busy wait
-        return null;
     }
 
 

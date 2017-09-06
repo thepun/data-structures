@@ -1,8 +1,6 @@
 package org.thepun.data.queue;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.thepun.unsafe.ArrayMemory;
 import org.thepun.unsafe.MemoryFence;
@@ -35,9 +33,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
         RingBufferConsumer<T>[] newConsumers = Arrays.copyOf(oldConsumers, oldConsumers.length + 1);
         RingBufferConsumer<T> consumer = new RingBufferConsumer<>(this);
         newConsumers[oldConsumers.length] = consumer;
-        MemoryFence.full();
         consumers = newConsumers;
-        MemoryFence.full();
         return consumer;
     }
 
@@ -160,12 +156,6 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
 
             localConsumerReadCounter.set(Long.MAX_VALUE);
             return (T) element;
-        }
-
-        @Override
-        public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
-            //TODO: implement busy wait
-            return null;
         }
     }
 }

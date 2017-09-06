@@ -26,6 +26,25 @@ public interface QueueHead<T> {
      * @return element
      * @throws TimeoutException
      */
-    T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException;
+    default T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
+        long start = System.nanoTime();
+        long finish = start + timeUnit.toNanos(timeout);
+
+        T element;
+        for (;;) {
+            element = removeFromHead();
+            if (element != null) {
+                return element;
+            }
+
+            if (System.nanoTime() > finish) {
+                throw new TimeoutException();
+            }
+
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+        }
+    }
 
 }

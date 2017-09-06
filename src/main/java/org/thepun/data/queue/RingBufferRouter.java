@@ -122,16 +122,13 @@ public final class RingBufferRouter<T> implements Router<T> {
         for (int i = 0; i < consumers.length; i++) {
             consumers[i].producers = newProducers;
         }
-        MemoryFence.full();
     }
 
     private void updateConsumers(RingBufferConsumer<T>[] newConsumers) {
-        MemoryFence.full();
         consumers = newConsumers;
         for (int i = 0; i < producers.length; i++) {
             producers[i].consumers = newConsumers;
         }
-        MemoryFence.full();
     }
 
 
@@ -265,12 +262,6 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             localReadCounter = Long.MAX_VALUE;
             return (T) element;
-        }
-
-        @Override
-        public T removeFromHead(long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
-            //TODO: implement busy wait
-            return null;
         }
     }
 }
