@@ -174,11 +174,11 @@ public final class RingBufferRouter<T> implements Router<T> {
                 localReadCounter = readIndex;
 
                 if (writeIndex >= readIndex + size) {
-                    localWriteCounter = Long.MAX_VALUE;
                     return false;
                 }
             }
 
+            MemoryFence.store();
             localWriteCounter = writeIndex;
             while (!writeCounter.compareAndSwap(writeIndex, writeIndex + 1)) {
                 writeIndex = writeCounter.get();
@@ -241,11 +241,11 @@ public final class RingBufferRouter<T> implements Router<T> {
                 localWriteCounter = writeIndex;
 
                 if (readIndex >= writeIndex) {
-                    localReadCounter = Long.MAX_VALUE;
                     return null;
                 }
             }
 
+            MemoryFence.store();
             localReadCounter = readIndex;
             while (!readCounter.compareAndSwap(readIndex, readIndex + 1)) {
                 readIndex = readCounter.get();
