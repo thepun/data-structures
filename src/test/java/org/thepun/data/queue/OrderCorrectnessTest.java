@@ -86,6 +86,8 @@ public class OrderCorrectnessTest {
     @Test
     public void addBunchAndGetBunchMultipleTimes() {
         for (int l = 0; l < 10000; l++) {
+            Object o1 = null;
+
             for (long i = 0; i < 10000; i++) {
                 boolean result = tail.addToTail(i * l);
                 assertTrue(result);
@@ -114,13 +116,13 @@ public class OrderCorrectnessTest {
         list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
         RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
-        list.add(new Object[] {arrayBridge, arrayBridge});
+        list.add(new Object[] {arrayBridge, arrayBridge});*/
 
         RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
-        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});*/
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
-        RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
-        list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});
+        /*RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
+        list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});*/
 
         return list;
     }

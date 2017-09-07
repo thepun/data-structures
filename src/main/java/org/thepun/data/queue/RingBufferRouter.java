@@ -10,6 +10,7 @@ import org.thepun.unsafe.MemoryFence;
 public final class RingBufferRouter<T> implements Router<T> {
 
     private final int size;
+    private final int mask;
     private final Object[] data;
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
@@ -22,8 +23,12 @@ public final class RingBufferRouter<T> implements Router<T> {
             throw new IllegalArgumentException("Size should be greater then zero");
         }
 
-        size = bufferSize;
-        data = new Object[bufferSize];
+        double log2 = Math.log10(bufferSize) / Math.log10(2);
+        int pow = (int) Math.ceil(log2);
+
+        size = (int) Math.pow(2, pow);
+        mask = size - 1;
+        data = new Object[size];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
         consumers = new RingBufferConsumer[0];
@@ -137,6 +142,7 @@ public final class RingBufferRouter<T> implements Router<T> {
         private final RingBufferRouter<T> parent;
 
         private final int size;
+        private final int mask;
         private final Object[] data;
         private final AlignedLong readCounter;
         private final AlignedLong writeCounter;
@@ -150,6 +156,7 @@ public final class RingBufferRouter<T> implements Router<T> {
             this.parent = parent;
 
             size = parent.size;
+            mask = parent.mask;
             data = parent.data;
             consumers = parent.consumers;
             readCounter = parent.readCounter;
@@ -189,7 +196,7 @@ public final class RingBufferRouter<T> implements Router<T> {
                 }
             }
 
-            int index = (int) writeIndex % size;
+            int index = (int) (writeIndex & mask);
             ArrayMemory.setObject(data, index, element);
             MemoryFence.store();
 
@@ -203,7 +210,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
         private final RingBufferRouter<T> parent;
 
-        private final int size;
+        private final int mask;
         private final Object[] data;
         private final AlignedLong readCounter;
         private final AlignedLong writeCounter;
@@ -216,7 +223,7 @@ public final class RingBufferRouter<T> implements Router<T> {
         private RingBufferConsumer(RingBufferRouter<T> parent) {
             this.parent = parent;
 
-            size = parent.size;
+            mask = parent.mask;
             data = parent.data;
             producers = parent.producers;
             readCounter = parent.readCounter;
@@ -256,7 +263,7 @@ public final class RingBufferRouter<T> implements Router<T> {
                 }
             }
 
-            int index = (int) readIndex % size;
+            int index = (int) (readIndex & mask);
             Object element = ArrayMemory.getObject(data, index);
             MemoryFence.load();
 
