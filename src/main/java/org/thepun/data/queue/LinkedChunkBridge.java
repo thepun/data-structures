@@ -69,7 +69,6 @@ public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
             }
 
             ArrayMemory.setObject(localEmptyChain, LINKED_FIRST_ITEM_INDEX_ADDRESS, element);
-
             tail.emptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
             ArrayMemory.setObject(localEmptyChain, LINKED_REF_TO_NEXT_INDEX_ADDRESS, null);
             ArrayMemory.setObject(localBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS, localEmptyChain);
