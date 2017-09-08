@@ -1,12 +1,9 @@
 package org.thepun.data.queue;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.thepun.unsafe.ArrayMemory;
 import org.thepun.unsafe.ArrayMemoryLayout;
-import org.thepun.unsafe.MemoryFence;
 
 /**
  * Single producer / single consumer queue implementation based on linked list.
@@ -38,14 +35,14 @@ public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
     private static final Object[] LINKED_NULLS_BUNCH = new Object[LINKED_BUNCH_SIZE];
 
 
-    private final AlignedLinkedNode head;
-    private final AlignedLinkedNode tail;
+    private final AlignedBunchReference head;
+    private final AlignedBunchReference tail;
     private final AtomicReference<Object[]> emptyChain;
 
     public LinkedChunkBridge() {
         Object[] firstBunch = new Object[LINKED_BUNCH_SIZE];
-        head = new AlignedLinkedNode();
-        tail = new AlignedLinkedNode();
+        head = new AlignedBunchReference();
+        tail = new AlignedBunchReference();
         head.bunch = firstBunch;
         tail.bunch = firstBunch;
         head.index = LINKED_FIRST_ITEM_INDEX;
@@ -68,9 +65,9 @@ public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
                 localEmptyChain = newChain;
             }
 
-            ArrayMemory.setObject(localEmptyChain, LINKED_FIRST_ITEM_INDEX_ADDRESS, element);
             tail.emptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
             ArrayMemory.setObject(localEmptyChain, LINKED_REF_TO_NEXT_INDEX_ADDRESS, null);
+            ArrayMemory.setObject(localEmptyChain, LINKED_FIRST_ITEM_INDEX_ADDRESS, element);
             ArrayMemory.setObject(localBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS, localEmptyChain);
             tail.bunch = localEmptyChain;
             tail.index = LINKED_SECOND_ITEM_INDEX;

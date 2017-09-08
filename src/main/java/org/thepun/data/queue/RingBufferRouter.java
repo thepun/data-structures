@@ -122,7 +122,6 @@ public final class RingBufferRouter<T> implements Router<T> {
     }
 
     private void updateProducers(RingBufferProducer<T>[] newProducers) {
-        MemoryFence.full();
         producers = newProducers;
         for (int i = 0; i < consumers.length; i++) {
             consumers[i].producers = newProducers;

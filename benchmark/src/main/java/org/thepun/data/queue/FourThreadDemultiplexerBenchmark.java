@@ -26,7 +26,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @BenchmarkMode(Mode.AverageTime)
 @Warmup(iterations = 10, batchSize = 1)
 @Measurement(iterations = 10, batchSize = 1)
-@Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
+@Fork(jvmArgs = {"-verbose:gc", "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class FourThreadDemultiplexerBenchmark {
 
     private Long[] values;
@@ -59,6 +59,18 @@ public class FourThreadDemultiplexerBenchmark {
     @Benchmark
     public long ringBufferDemultiplexer() throws InterruptedException {
         RingBufferDemultiplexer<Long> queue = new RingBufferDemultiplexer<>(1000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+        queueHeads[2] = queue.createConsumer();
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long stealingLinkedChunk() throws InterruptedException {
+        StealingLinkedChunkDemultiplexer<Long> queue = new StealingLinkedChunkDemultiplexer<>();
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -152,13 +164,13 @@ public class FourThreadDemultiplexerBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
-   /*public static void main(String[] args) throws InterruptedException {
-        FourThreadBenchmark benchmark = new FourThreadBenchmark();
+   public static void main(String[] args) throws InterruptedException {
+       FourThreadDemultiplexerBenchmark benchmark = new FourThreadDemultiplexerBenchmark();
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.ringBufferRouterWithXADDMultiplexer();
+            benchmark.stealingLinkedChunk();
             System.out.println("next");
         }
-    }*/
+    }
 }

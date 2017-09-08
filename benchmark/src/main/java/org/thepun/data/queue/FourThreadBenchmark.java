@@ -155,7 +155,7 @@ public class FourThreadBenchmark {
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.ringBufferRouterWithXADDMultiplexer();
+            benchmark.ringBufferRouter();
             System.out.println("next");
         }
     }*/

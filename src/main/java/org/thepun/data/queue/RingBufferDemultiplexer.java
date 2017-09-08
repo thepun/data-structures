@@ -12,7 +12,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
 
-    private long producerReadCounter;
+    private long producerReadIndex;
     private RingBufferConsumer<T>[] consumers;
 
     public RingBufferDemultiplexer(int bufferSize) {
@@ -74,7 +74,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
     public boolean addToTail(T element) {
         AlignedLong localWriteCounter = writeCounter;
 
-        long readIndex = producerReadCounter;
+        long readIndex = producerReadIndex;
         long writeIndex = localWriteCounter.get();
         long writeIndexMinusSize = writeIndex - size;
         if (writeIndexMinusSize >= readIndex) {
@@ -88,13 +88,13 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
                     readIndex = localReadCounterFromConsumer;
                 }
             }
-            producerReadCounter = readIndex;
+            producerReadIndex = readIndex;
 
             if (writeIndexMinusSize >= readIndex) {
                 return false;
             }
         } else {
-            producerReadCounter = readIndex + 1;
+            producerReadIndex = readIndex + 1;
         }
 
         int index = (int) writeIndex % size;

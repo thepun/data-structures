@@ -1,41 +1,52 @@
 package org.thepun.data.queue;
 
 import org.thepun.unsafe.ArrayMemory;
+import org.thepun.unsafe.MemoryFence;
 
 
 public final class RingBufferBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     private final int size;
+    private final int mask;
     private final Object[] data;
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
+    private final AlignedLong localReadCounter;
+    private final AlignedLong localWriteCounter;
 
     public RingBufferBridge(int queueSize) {
         if (queueSize < 1) {
             throw new IllegalArgumentException("Size should be greater then zero");
         }
 
-        size = queueSize;
-        data = new Object[queueSize];
+        double log2 = Math.log10(queueSize) / Math.log10(2);
+        int pow = (int) Math.ceil(log2);
+
+        size = (int) Math.pow(2, pow);
+        mask = size - 1;
+        data = new Object[size];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
+        localReadCounter = new AlignedLong();
+        localWriteCounter = new AlignedLong();
     }
 
     @Override
     public T removeFromHead() {
-        long writeIndex = writeCounter.get();
+        long writeIndex = localWriteCounter.get();
         long readIndex = readCounter.get();
         if (readIndex >= writeIndex) {
-            return null;
+            writeIndex = writeCounter.get();
+            localWriteCounter.set(writeIndex);
+
+            if (readIndex >= writeIndex) {
+                return null;
+            }
         }
 
-        int index = (int) readIndex % size;
-        Object element;
-        do {
-            element = ArrayMemory.getObject(data, index);
-        } while (element == null);
-        ArrayMemory.setObject(data, index, null);
-
+        int index = (int) (readIndex & mask);
+        Object element = ArrayMemory.getObject(data, index);
+        MemoryFence.load();
         readCounter.set(readIndex + 1);
 
         return (T) element;
@@ -43,15 +54,20 @@ public final class RingBufferBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     @Override
     public boolean addToTail(T element) {
-        long readIndex = readCounter.get();
+        long readIndex = localReadCounter.get();
         long writeIndex = writeCounter.get();
         if (writeIndex >= readIndex + size) {
-            return false;
+            readIndex = readCounter.get();
+            localReadCounter.set(readIndex);
+
+            if (readIndex >= writeIndex) {
+                return false;
+            }
         }
 
-        int index = (int) writeIndex % size;
+        int index = (int) (writeIndex & mask);
         ArrayMemory.setObject(data, index, element);
-
+        MemoryFence.store();
         writeCounter.set(writeIndex + 1);
 
         return true;

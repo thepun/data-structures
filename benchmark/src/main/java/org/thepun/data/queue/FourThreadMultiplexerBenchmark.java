@@ -56,7 +56,7 @@ public class FourThreadMultiplexerBenchmark {
     }
 
     @Benchmark
-    public long roundRobin() throws InterruptedException {
+    public long unfairLinkedChunk() throws InterruptedException {
         UnfairLinkedChunkMultiplexer<Long> queue = new UnfairLinkedChunkMultiplexer<>();
 
         QueueTail<Long>[] queueTails = new QueueTail[3];
@@ -131,7 +131,7 @@ public class FourThreadMultiplexerBenchmark {
     public long mpmcArrayQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcArrayQueue<>(1000));
 
-        QueueTail<Long>[] queueTails = new QueueTail[2];
+        QueueTail<Long>[] queueTails = new QueueTail[3];
         queueTails[0] = queue;
         queueTails[1] = queue;
         queueTails[2] = queue;
@@ -143,7 +143,7 @@ public class FourThreadMultiplexerBenchmark {
     public long mpmcAtomicArrayQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcAtomicArrayQueue<>(1000));
 
-        QueueTail<Long>[] queueTails = new QueueTail[2];
+        QueueTail<Long>[] queueTails = new QueueTail[3];
         queueTails[0] = queue;
         queueTails[1] = queue;
         queueTails[2] = queue;

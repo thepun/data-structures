@@ -5,16 +5,16 @@ import java.util.concurrent.CountDownLatch;
 
 final class ConsumerThread extends StartFinishThread {
 
-    private final int count;
     private final QueueHead<Long> queueHead;
+    private final CaseChecker activeChecker;
 
     private long result;
 
-    ConsumerThread(CountDownLatch startLatch, CountDownLatch finishLatch, QueueHead<Long> queueHead, int count) {
+    ConsumerThread(CountDownLatch startLatch, CountDownLatch finishLatch, QueueHead<Long> queueHead, CaseChecker activeChecker) {
         super(startLatch, finishLatch);
 
         this.queueHead = queueHead;
-        this.count = count;
+        this.activeChecker = activeChecker;
     }
 
     long getResult() {
@@ -25,15 +25,13 @@ final class ConsumerThread extends StartFinishThread {
     void execute() {
         Long value;
 
-        long tempValue = 0;
-        for (int i = 0; i < count; i++) {
-            do {
-                value = queueHead.removeFromHead();
-            } while (value == null);
+        while (activeChecker.isActive()) {
+            value = queueHead.removeFromHead();
 
-            tempValue += value.longValue();
+            if (value != null) {
+                result += value.longValue();
+                activeChecker.actionCompleted();
+            }
         }
-
-        result += tempValue;
     }
 }
