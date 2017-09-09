@@ -81,6 +81,18 @@ public class FourThreadDemultiplexerBenchmark {
     }
 
     @Benchmark
+    public long gbStealingLinkedChunk() throws InterruptedException {
+        GbStealingLinkedChunkDemultiplexer<Long> queue = new GbStealingLinkedChunkDemultiplexer<>();
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+        queueHeads[2] = queue.createConsumer();
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
+    }
+
+    @Benchmark
     public long arrayBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
 
@@ -164,13 +176,13 @@ public class FourThreadDemultiplexerBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
-   public static void main(String[] args) throws InterruptedException {
+   /*public static void main(String[] args) throws InterruptedException {
        FourThreadDemultiplexerBenchmark benchmark = new FourThreadDemultiplexerBenchmark();
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.stealingLinkedChunk();
+            benchmark.gbstealingLinkedChunk();
             System.out.println("next");
         }
-    }
+    }*/
 }
