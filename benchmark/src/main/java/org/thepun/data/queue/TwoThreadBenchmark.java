@@ -65,6 +65,12 @@ public class TwoThreadBenchmark {
     }
 
     @Benchmark
+    public long greedyRingBufferRouter() throws InterruptedException {
+        GreedyRingBufferRouter<Long> queue = new GreedyRingBufferRouter<>(1000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long ringBufferDemultiplexer() throws InterruptedException {
         RingBufferDemultiplexer<Long> queue = new RingBufferDemultiplexer<>(1000);
         return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue, values, 100_000_000);

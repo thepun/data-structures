@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.thepun.unsafe.ArrayMemory;
 import org.thepun.unsafe.MemoryFence;
 
-public final class RingBufferRouter<T> implements Router<T> {
+public final class GreedyRingBufferRouter<T> implements Router<T> {
 
     private final int size;
     private final int mask;
@@ -16,7 +16,7 @@ public final class RingBufferRouter<T> implements Router<T> {
     private RingBufferConsumer<T>[] consumers;
     private RingBufferProducer<T>[] producers;
 
-    public RingBufferRouter(int bufferSize) {
+    public GreedyRingBufferRouter(int bufferSize) {
         if (bufferSize < 1) {
             throw new IllegalArgumentException("Size should be greater then zero");
         }
@@ -136,7 +136,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
     private static final class RingBufferProducer<T> implements QueueTail<T> {
 
-        private final RingBufferRouter<T> parent;
+        private final GreedyRingBufferRouter<T> parent;
 
         private final int size;
         private final int mask;
@@ -149,7 +149,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
         private RingBufferConsumer<T>[] consumers;
 
-        private RingBufferProducer(RingBufferRouter<T> parent) {
+        private RingBufferProducer(GreedyRingBufferRouter<T> parent) {
             this.parent = parent;
 
             size = parent.size;
@@ -169,7 +169,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             long writeIndex = writeCounter.get();
             if (writeIndex >= readIndex + size) {
-                RingBufferConsumer<T>[] localConsumers = this.consumers;
+                RingBufferConsumer<T>[] localConsumers = consumers;
 
                 readIndex = readCounter.get();
                 for (int i = 0; i < localConsumers.length; i++) {
@@ -187,6 +187,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             MemoryFence.store();
             localWriteCounter.set(writeIndex);
+
             while (!writeCounter.compareAndSwap(writeIndex, writeIndex + 1)) {
                 writeIndex = writeCounter.get();
 
@@ -198,8 +199,8 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             int index = (int) (writeIndex & mask);
             ArrayMemory.setObject(data, index, element);
-            MemoryFence.store();
 
+            MemoryFence.store();
             localWriteCounter.set(Long.MAX_VALUE);
             return true;
         }
@@ -208,7 +209,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
     private static final class RingBufferConsumer<T> implements QueueHead<T> {
 
-        private final RingBufferRouter<T> parent;
+        private final GreedyRingBufferRouter<T> parent;
 
         private final int mask;
         private final Object[] data;
@@ -220,7 +221,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
         private RingBufferProducer<T>[] producers;
 
-        private RingBufferConsumer(RingBufferRouter<T> parent) {
+        private RingBufferConsumer(GreedyRingBufferRouter<T> parent) {
             this.parent = parent;
 
             mask = parent.mask;
@@ -237,9 +238,14 @@ public final class RingBufferRouter<T> implements Router<T> {
         public T removeFromHead() {
             long writeIndex = localWriteCounter;
 
-            long readIndex = readCounter.get();
+            long readIndex = localReadCounter.get();
+            if (readIndex == Long.MAX_VALUE) {
+                readIndex = readCounter.getAndIncrement();
+                localReadCounter.set(readIndex);
+            }
+
             if (readIndex >= writeIndex) {
-                RingBufferProducer<T>[] localProducers = this.producers;
+                RingBufferProducer<T>[] localProducers = producers;
 
                 writeIndex = writeCounter.get();
                 for (int i = 0; i < localProducers.length; i++) {
@@ -255,21 +261,10 @@ public final class RingBufferRouter<T> implements Router<T> {
                 }
             }
 
-            MemoryFence.store();
-            localReadCounter.set(readIndex);
-            while (!readCounter.compareAndSwap(readIndex, readIndex + 1)) {
-                readIndex = readCounter.get();
-
-                if (readIndex >= writeIndex) {
-                    localReadCounter.set(Long.MAX_VALUE);
-                    return null;
-                }
-            }
-
             int index = (int) (readIndex & mask);
             Object element = ArrayMemory.getObject(data, index);
-            MemoryFence.load();
 
+            MemoryFence.store();
             localReadCounter.set(Long.MAX_VALUE);
             return (T) element;
         }

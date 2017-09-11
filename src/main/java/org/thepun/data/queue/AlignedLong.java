@@ -40,59 +40,19 @@ final class AlignedLong {
             after13, after14, after15;
 
 
-    /**
-     * Getter for current value
-     *
-     * @return current value
-     */
-    public long get() {
+    long get() {
         return value;
     }
 
-    /**
-     * Setter for current value
-     *
-     * @param newValue value to set
-     */
-    public void set(long newValue) {
+    void set(long newValue) {
         value = newValue;
     }
 
-    /**
-     * Getter for current value which crosses memory barrier
-     *
-     * @return latest current value
-     */
-    public long volatileGet() {
-        return ObjectMemory.getLongVolatile(this, valueOffset);
-    }
-
-    /**
-     * Setter for current value which crosses memory barrier
-     *
-     * @param newValue value to set
-     */
-    public void volatileSet(long newValue) {
-        ObjectMemory.setLongVolatile(this, valueOffset, newValue);
-    }
-
-    /**
-     * Synchronously change current value. It is common CAS operation that provides relevant memory consistency guaranties.
-     *
-     * @param expectedValue value that is stored in memory
-     * @param newValue value to change to
-     * @return true on successful operation and false otherwise
-     */
-    public boolean compareAndSwap(long expectedValue, long newValue) {
+    boolean compareAndSwap(long expectedValue, long newValue) {
         return ObjectMemory.compareAndSwapLong(this, valueOffset, expectedValue, newValue);
     }
 
-    /**
-     * Synchronously increment value and return previous
-     *
-     * @return previous value
-     */
-    public long getAndIncrement() {
+    long getAndIncrement() {
         return ObjectMemory.getAndIncrementLong(this, valueOffset, 1L);
     }
 }

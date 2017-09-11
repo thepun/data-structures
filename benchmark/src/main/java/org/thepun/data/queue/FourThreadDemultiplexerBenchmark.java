@@ -57,6 +57,18 @@ public class FourThreadDemultiplexerBenchmark {
     }
 
     @Benchmark
+    public long greedyRingBufferRouter() throws InterruptedException {
+        GreedyRingBufferRouter<Long> queue = new GreedyRingBufferRouter<>(1000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+        queueHeads[2] = queue.createConsumer();
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long ringBufferDemultiplexer() throws InterruptedException {
         RingBufferDemultiplexer<Long> queue = new RingBufferDemultiplexer<>(1000);
 
@@ -71,18 +83,6 @@ public class FourThreadDemultiplexerBenchmark {
     @Benchmark
     public long stealingLinkedChunk() throws InterruptedException {
         StealingLinkedChunkDemultiplexer<Long> queue = new StealingLinkedChunkDemultiplexer<>();
-
-        QueueHead<Long>[] queueHeads = new QueueHead[3];
-        queueHeads[0] = queue.createConsumer();
-        queueHeads[1] = queue.createConsumer();
-        queueHeads[2] = queue.createConsumer();
-
-        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
-    }
-
-    @Benchmark
-    public long gbStealingLinkedChunk() throws InterruptedException {
-        GbStealingLinkedChunkDemultiplexer<Long> queue = new GbStealingLinkedChunkDemultiplexer<>();
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
