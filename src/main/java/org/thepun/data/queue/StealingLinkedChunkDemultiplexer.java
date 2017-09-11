@@ -9,6 +9,8 @@ import org.thepun.unsafe.ArrayMemoryLayout;
 
 public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<T> {
 
+    // TODO: align consumer variables
+
     private static final int LINKED_BUNCH_SIZE = 1024;
     private static final int LINKED_FIRST_OFFSET_INDEX = LINKED_BUNCH_SIZE - 2;
     private static final int LINKED_FIRST_ITEM_INDEX = 0;
