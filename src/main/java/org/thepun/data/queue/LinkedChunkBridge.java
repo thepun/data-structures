@@ -103,7 +103,7 @@ public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
             Object[] prevEmptyChainHead = emptyChain.get();
             if (prevEmptyChainHead == null) {
                 // we need to cross fence to be able to rely on it
-                emptyChain.set(oldHeadBunh);
+                emptyChain.lazySet(oldHeadBunh);
             } else {
                 // add empty bunch to list
                 ArrayMemory.setObject(oldHeadBunh, LINKED_REF_TO_NEXT_INDEX_ADDRESS, prevEmptyChainHead);
@@ -113,7 +113,7 @@ public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
                     // ensure initial state is written by reader thread
                     ArrayMemory.setObject(oldHeadBunh, LINKED_REF_TO_NEXT_INDEX_ADDRESS, null);
                     // again we need to cross fence to be able to rely on it
-                    emptyChain.set(oldHeadBunh);
+                    emptyChain.lazySet(oldHeadBunh);
                 }
             }
         }
