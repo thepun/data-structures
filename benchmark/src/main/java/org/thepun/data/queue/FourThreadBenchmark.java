@@ -61,6 +61,21 @@ public class FourThreadBenchmark {
     }
 
     @Benchmark
+    public long greedyRingBufferRouter() throws InterruptedException {
+        GreedyRingBufferRouter<Long> queue = new GreedyRingBufferRouter<>(10000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[2];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+
+        QueueTail<Long>[] queueTails = new QueueTail[2];
+        queueTails[0] = queue.createProducer();
+        queueTails[1] = queue.createProducer();
+
+        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
     public long arraydBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
 

@@ -176,12 +176,12 @@ public class FourThreadDemultiplexerBenchmark {
         return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue, values, 100_000_000);
     }
 
-   /*public static void main(String[] args) throws InterruptedException {
+    /*public static void main(String[] args) throws InterruptedException {
        FourThreadDemultiplexerBenchmark benchmark = new FourThreadDemultiplexerBenchmark();
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.gbstealingLinkedChunk();
+            benchmark.greedyRingBufferRouter();
             System.out.println("next");
         }
     }*/

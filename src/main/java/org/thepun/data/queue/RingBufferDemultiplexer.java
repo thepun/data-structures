@@ -13,6 +13,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
     private final AlignedLong writeCounter;
 
     private long producerReadIndex;
+    // TODO: split consumers and counters
     private RingBufferConsumer<T>[] consumers;
 
     public RingBufferDemultiplexer(int bufferSize) {
