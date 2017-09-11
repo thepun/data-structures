@@ -112,9 +112,6 @@ public class OrderCorrectnessTest {
         /*LinkedChunkBridge<Long> longSPSCSplittedLinkedQueue = new LinkedChunkBridge<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
-        RoundRobinLinkedMultiplexer<Long> longLinkedArrayMultiplexer = new RoundRobinLinkedMultiplexer<>();
-        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
-
         RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
         list.add(new Object[] {arrayBridge, arrayBridge});*/
 
@@ -127,8 +124,11 @@ public class OrderCorrectnessTest {
         StealingLinkedChunkDemultiplexer<Long> arrayDemultiplexer = new StealingLinkedChunkDemultiplexer<>();
         list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});*/
 
-        GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
-        list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});
+        /*GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
+        list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});*/
+
+        GreedyRingBufferMultiplexer<Long> longLinkedArrayMultiplexer = new GreedyRingBufferMultiplexer<>(10000000);
+        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
         return list;
     }
