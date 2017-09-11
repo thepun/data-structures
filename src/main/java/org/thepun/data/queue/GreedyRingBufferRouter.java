@@ -7,6 +7,7 @@ import org.thepun.unsafe.MemoryFence;
 
 public final class GreedyRingBufferRouter<T> implements Router<T> {
 
+    // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
     // TODO: align consumers/producers
 
     private final int size;

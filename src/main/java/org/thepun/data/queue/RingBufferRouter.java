@@ -8,6 +8,8 @@ import org.thepun.unsafe.MemoryFence;
 
 public final class RingBufferRouter<T> implements Router<T> {
 
+    // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
+
     private final int size;
     private final int mask;
     private final Object[] data;

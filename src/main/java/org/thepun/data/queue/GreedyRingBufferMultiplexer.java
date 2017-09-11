@@ -7,6 +7,7 @@ import org.thepun.unsafe.MemoryFence;
 
 public final class GreedyRingBufferMultiplexer<T> implements Multiplexer<T> {
 
+    // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
     // TODO: align producers and variables
 
     private final int size;

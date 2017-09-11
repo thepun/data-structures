@@ -8,6 +8,7 @@ import org.thepun.unsafe.MemoryFence;
 public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
 
     // TODO: align consumers
+    // TODO: change size to mask
 
     private final int size;
     private final Object[] data;
