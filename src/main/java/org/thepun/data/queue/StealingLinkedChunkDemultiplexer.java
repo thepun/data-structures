@@ -1,6 +1,7 @@
 package org.thepun.data.queue;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.thepun.unsafe.ArrayMemory;
@@ -9,23 +10,26 @@ import org.thepun.unsafe.ArrayMemoryLayout;
 public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<T> {
 
     private static final int LINKED_BUNCH_SIZE = 1024;
-    private static final int LINKED_FIRST_OFFSET_INDEX = LINKED_BUNCH_SIZE - 1;
+    private static final int LINKED_FIRST_OFFSET_INDEX = LINKED_BUNCH_SIZE - 2;
     private static final int LINKED_FIRST_ITEM_INDEX = 0;
     private static final int LINKED_SECOND_ITEM_INDEX = 1;
     private static final long LINKED_FIRST_ITEM_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, 0);
     private static final long LINKED_REF_TO_NEXT_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, LINKED_BUNCH_SIZE - 1);
+    private static final long LINKED_REF_TO_NEXT_GC_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, LINKED_BUNCH_SIZE - 2);
     private static final Object[] LINKED_NULLS_BUNCH = new Object[LINKED_BUNCH_SIZE];
     private static final Object EMPTY_REF = new Object();
     private static final Object STEAL_REF = new Object();
 
+
+    private final AtomicReference<Object[]> globalEmptyChain;
+
     private int nextConsumerIndex;
-    //private Object[] writerEmptyChain;
+    private Object[] writerEmptyChain;
     private StealingConsumer<T>[] consumers;
 
     public StealingLinkedChunkDemultiplexer() {
         consumers = new StealingConsumer[0];
-
-       // globalEmptyChain = new AtomicReference<>(null);
+        globalEmptyChain = new AtomicReference<>(null);
     }
 
     @Override
@@ -98,8 +102,8 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
         Object[] currentBunch = currentWriteNode.bunch;
         int currentIndex = currentWriteNode.index;
         if (currentIndex == LINKED_FIRST_OFFSET_INDEX) {
-            Object[] localEmptyChain = new Object[LINKED_BUNCH_SIZE];
-            /*Object[] localEmptyChain = writerEmptyChain;
+            //Object[] localEmptyChain = new Object[LINKED_BUNCH_SIZE];
+            Object[] localEmptyChain = writerEmptyChain;
             if (localEmptyChain == null) {
                 Object[] newChain = globalEmptyChain.getAndSet(null);
                 if (newChain == null) {
@@ -107,12 +111,10 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
                 }
 
                 localEmptyChain = newChain;
-                localEmptyChain = new Object[LINKED_BUNCH_SIZE];
-            }*/
+                //localEmptyChain = new Object[LINKED_BUNCH_SIZE];
+            }
 
-            //writerEmptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
-            ArrayMemory.setObject(localEmptyChain, LINKED_REF_TO_NEXT_INDEX_ADDRESS, null);
-            //System.arraycopy(LINKED_NULLS_BUNCH, 0, localEmptyChain, 0, LINKED_BUNCH_SIZE);
+            writerEmptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, LINKED_REF_TO_NEXT_GC_INDEX_ADDRESS);
             ArrayMemory.setObject(localEmptyChain, LINKED_FIRST_ITEM_INDEX_ADDRESS, element);
             ArrayMemory.setObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS, localEmptyChain);
             currentWriteNode.index = LINKED_SECOND_ITEM_INDEX;
@@ -135,11 +137,14 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
         private final AlignedLong nextConsumerToStealFrom;
         private final AlignedBunchReference currentReadNode;
         private final AlignedBunchReference currentWriteNode;
+        private final AtomicReference<Object[]> emptyChain;
 
         private StealingConsumer<T>[] consumers;
 
         private StealingConsumer(StealingLinkedChunkDemultiplexer<T> parent) {
             this.parent = parent;
+
+            emptyChain = parent.globalEmptyChain;
 
             Object[] firstBunch = new Object[LINKED_BUNCH_SIZE];
             currentReadNode = new AlignedBunchReference();
@@ -162,16 +167,26 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
             Object element;
             for (;;) {
                 if (currentIndex == LINKED_FIRST_OFFSET_INDEX) {
-                    Object[] refToNextBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
-                    if (refToNextBunch == null) {
+                    Object[] oldHeadBunh = currentBunch;
+                    currentBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
+                    if (currentBunch == null) {
                         currentNode.index = currentIndex;
                         break;
                     }
 
-                    currentBunch = refToNextBunch;
+                    currentNode.bunch = currentBunch;
                     currentIndex = LINKED_FIRST_ITEM_INDEX;
-                    currentNode.index = currentIndex;
-                    currentNode.bunch = refToNextBunch;
+                    currentNode.index = LINKED_FIRST_ITEM_INDEX;
+
+                    // clear chunk
+                    System.arraycopy(LINKED_NULLS_BUNCH, 0, oldHeadBunh, 0, LINKED_BUNCH_SIZE);
+
+                    // return to chunk pool
+                    Object[] prevEmptyChainHead;
+                    do {
+                        prevEmptyChainHead = emptyChain.get();
+                        ArrayMemory.setObject(oldHeadBunh, LINKED_REF_TO_NEXT_GC_INDEX_ADDRESS, prevEmptyChainHead);
+                    } while (!emptyChain.compareAndSet(prevEmptyChainHead, oldHeadBunh));
                 }
 
                 element = ArrayMemory.getObject(currentBunch, currentIndex);
