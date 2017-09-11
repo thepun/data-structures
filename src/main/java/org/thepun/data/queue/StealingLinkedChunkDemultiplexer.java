@@ -16,6 +16,7 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
     private static final long LINKED_REF_TO_NEXT_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, LINKED_BUNCH_SIZE - 1);
     private static final Object[] LINKED_NULLS_BUNCH = new Object[LINKED_BUNCH_SIZE];
     private static final Object EMPTY_REF = new Object();
+    private static final Object STEAL_REF = new Object();
 
     private int nextConsumerIndex;
     //private Object[] writerEmptyChain;
@@ -80,13 +81,6 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
 
             StealingConsumer<T>[] otherConsumers = Stream.of(this.consumers)
                     .filter(consumer -> consumer != thisConsumer)
-                    .sorted((a, b) -> {
-                        if (finalI % 2 == 0) {
-                            return a.hashCode() - b.hashCode();
-                        } else {
-                            return b.hashCode() - a.hashCode();
-                        }
-                    })
                     .toArray(length -> new StealingConsumer[length]);
 
             thisConsumer.consumers = otherConsumers;
@@ -182,13 +176,16 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
 
                 element = ArrayMemory.getObject(currentBunch, currentIndex);
 
-                // element didn't come yet
                 if (element == null) {
                     break;
                 }
 
+                if (element == EMPTY_REF) {
+                    break;
+                }
+
                 // try to get element
-                if (element != EMPTY_REF && ArrayMemory.compareAndSwapObject(currentBunch, currentIndex, element, EMPTY_REF)) {
+                if (element != STEAL_REF && ArrayMemory.compareAndSwapObject(currentBunch, currentIndex, element, EMPTY_REF)) {
                     currentNode.index = currentIndex + 1;
                     return (T) element;
                 }
@@ -204,21 +201,32 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
                 StealingConsumer<T> consumerToStealFrom = localConsumers[i % numberOfOtherConsumers];
                 currentNode = consumerToStealFrom.currentReadNode;
                 currentBunch = currentNode.bunch;
-                currentIndex = currentNode.index;
+                currentIndex = LINKED_FIRST_OFFSET_INDEX;
 
-                if (currentIndex == LINKED_FIRST_OFFSET_INDEX) {
-                    continue;
-                }
+                for (;;) {
+                    currentIndex--;
 
-                element = ArrayMemory.getObject(currentBunch, currentIndex);
-                if (element == null) {
-                    continue;
-                }
+                    element = ArrayMemory.getObject(currentBunch, currentIndex);
 
-                // try to seize element
-                if (element != EMPTY_REF && ArrayMemory.compareAndSwapObject(currentBunch, currentIndex, element, EMPTY_REF)) {
-                    nextConsumerToStealFrom.set(localNextConsumerToStealFrom + 1);
-                    return (T) element;
+                    if (element == EMPTY_REF) {
+                        break;
+                    }
+
+                    // try to seize element
+                    if (element != null && element != STEAL_REF && ArrayMemory.compareAndSwapObject(currentBunch, currentIndex, element, STEAL_REF)) {
+                        nextConsumerToStealFrom.set(localNextConsumerToStealFrom + 1);
+                        return (T) element;
+                    }
+
+                    if (currentIndex == LINKED_FIRST_ITEM_INDEX) {
+                        Object[] refToNextBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
+                        if (refToNextBunch == null) {
+                            break;
+                        }
+
+                        currentBunch = refToNextBunch;
+                        currentIndex = LINKED_FIRST_OFFSET_INDEX;
+                    }
                 }
             }
 
