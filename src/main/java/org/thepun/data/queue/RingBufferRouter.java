@@ -9,6 +9,7 @@ import org.thepun.unsafe.MemoryFence;
 public final class RingBufferRouter<T> implements Router<T> {
 
     // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
+    // TODO: use unsafe array access
 
     private final int size;
     private final int mask;

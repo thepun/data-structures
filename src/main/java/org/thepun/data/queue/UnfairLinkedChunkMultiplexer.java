@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @SuppressWarnings("unchecked")
 public final class UnfairLinkedChunkMultiplexer<T> implements Multiplexer<T> {
 
+    // TODO: align producers
+
     // TODO: refactor constants
     private static final int BUNCH_SIZE = 1024;
     private static final int FIRST_ITEM_INDEX = 1;

@@ -9,6 +9,7 @@ public final class GreedyRingBufferRouter<T> implements Router<T> {
 
     // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
     // TODO: align consumers/producers
+    // TODO: use unsafe array access
 
     private final int size;
     private final int mask;
