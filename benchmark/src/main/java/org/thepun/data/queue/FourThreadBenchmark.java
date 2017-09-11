@@ -77,7 +77,7 @@ public class FourThreadBenchmark {
 
     @Benchmark
     public long arraydBlockingQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[2];
         queueHeads[0] = queue;
@@ -137,7 +137,7 @@ public class FourThreadBenchmark {
 
     @Benchmark
     public long mpmcArrayQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcArrayQueue<>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcArrayQueue<>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[2];
         queueHeads[0] = queue;
@@ -152,7 +152,7 @@ public class FourThreadBenchmark {
 
     @Benchmark
     public long mpmcAtomicArrayQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcAtomicArrayQueue<>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcAtomicArrayQueue<>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[2];
         queueHeads[0] = queue;

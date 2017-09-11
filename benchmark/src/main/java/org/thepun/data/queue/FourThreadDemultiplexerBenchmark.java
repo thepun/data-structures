@@ -46,7 +46,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long ringBufferRouter() throws InterruptedException {
-        RingBufferRouter<Long> queue = new RingBufferRouter<>(1000);
+        RingBufferRouter<Long> queue = new RingBufferRouter<>(10000);
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -58,7 +58,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long greedyRingBufferRouter() throws InterruptedException {
-        GreedyRingBufferRouter<Long> queue = new GreedyRingBufferRouter<>(1000);
+        GreedyRingBufferRouter<Long> queue = new GreedyRingBufferRouter<>(10000);
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -70,7 +70,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long ringBufferDemultiplexer() throws InterruptedException {
-        RingBufferDemultiplexer<Long> queue = new RingBufferDemultiplexer<>(1000);
+        RingBufferDemultiplexer<Long> queue = new RingBufferDemultiplexer<>(10000);
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue.createConsumer();
@@ -94,7 +94,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long arrayBlockingQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue;
@@ -142,7 +142,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long spmcArrayQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new SpmcArrayQueue<>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new SpmcArrayQueue<>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue;
@@ -154,7 +154,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long mpmcArrayQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcArrayQueue<>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcArrayQueue<>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue;
@@ -166,7 +166,7 @@ public class FourThreadDemultiplexerBenchmark {
 
     @Benchmark
     public long mpmcAtomicArrayQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcAtomicArrayQueue<>(1000));
+        QueueAdapter<Long> queue = new QueueAdapter<>(new MpmcAtomicArrayQueue<>(10000));
 
         QueueHead<Long>[] queueHeads = new QueueHead[3];
         queueHeads[0] = queue;
