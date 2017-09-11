@@ -116,19 +116,19 @@ public class OrderCorrectnessTest {
         list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
         RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
-        list.add(new Object[] {arrayBridge, arrayBridge});
+        list.add(new Object[] {arrayBridge, arrayBridge});*/
 
         RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
         list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
-        RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
+        /*RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
         list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});
 
         StealingLinkedChunkDemultiplexer<Long> arrayDemultiplexer = new StealingLinkedChunkDemultiplexer<>();
         list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});*/
 
-        GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
-        list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});
+        /*GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
+        list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});*/
 
         return list;
     }

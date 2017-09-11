@@ -13,6 +13,8 @@ public final class RingBufferRouter<T> implements Router<T> {
     private final AlignedLong readCounter;
     private final AlignedLong writeCounter;
 
+    private AlignedLong[] consumerCounters;
+    private AlignedLong[] producerCounters;
     private RingBufferConsumer<T>[] consumers;
     private RingBufferProducer<T>[] producers;
 
@@ -29,6 +31,8 @@ public final class RingBufferRouter<T> implements Router<T> {
         data = new Object[size];
         readCounter = new AlignedLong();
         writeCounter = new AlignedLong();
+        consumerCounters = new AlignedLong[0];
+        producerCounters = new AlignedLong[0];
         consumers = new RingBufferConsumer[0];
         producers = new RingBufferProducer[0];
     }
@@ -121,15 +125,29 @@ public final class RingBufferRouter<T> implements Router<T> {
 
     private void updateProducers(RingBufferProducer<T>[] newProducers) {
         producers = newProducers;
+
+        AlignedLong[] newProducerCounters = new AlignedLong[newProducers.length];
+        for (int i = 0; i < newProducers.length; i++) {
+            newProducerCounters[i] = newProducers[i].localWriteCounter;
+        }
+
+        producerCounters = newProducerCounters;
         for (int i = 0; i < consumers.length; i++) {
-            consumers[i].producers = newProducers;
+            consumers[i].producers = newProducerCounters;
         }
     }
 
     private void updateConsumers(RingBufferConsumer<T>[] newConsumers) {
         consumers = newConsumers;
+
+        AlignedLong[] newConsumerCounters = new AlignedLong[newConsumers.length];
+        for (int i = 0; i < newConsumers.length; i++) {
+            newConsumerCounters[i] = newConsumers[i].localReadCounter;
+        }
+
+        consumerCounters = newConsumerCounters;
         for (int i = 0; i < producers.length; i++) {
-            producers[i].consumers = newConsumers;
+            producers[i].consumers = newConsumerCounters;
         }
     }
 
@@ -147,7 +165,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
         private long localReadCounter;
 
-        private RingBufferConsumer<T>[] consumers;
+        private AlignedLong[] consumers;
 
         private RingBufferProducer(RingBufferRouter<T> parent) {
             this.parent = parent;
@@ -155,7 +173,7 @@ public final class RingBufferRouter<T> implements Router<T> {
             size = parent.size;
             mask = parent.mask;
             data = parent.data;
-            consumers = parent.consumers;
+            consumers = parent.consumerCounters;
             readCounter = parent.readCounter;
             writeCounter = parent.writeCounter;
 
@@ -169,11 +187,11 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             long writeIndex = writeCounter.get();
             if (writeIndex >= readIndex + size) {
-                RingBufferConsumer<T>[] localConsumers = this.consumers;
+                AlignedLong[] localConsumers = consumers;
 
                 readIndex = readCounter.get();
                 for (int i = 0; i < localConsumers.length; i++) {
-                    long localReadCounterFromConsumer = localConsumers[i].localReadCounter.get();
+                    long localReadCounterFromConsumer = localConsumers[i].get();
                     if (readIndex > localReadCounterFromConsumer) {
                         readIndex = localReadCounterFromConsumer;
                     }
@@ -218,14 +236,14 @@ public final class RingBufferRouter<T> implements Router<T> {
 
         private long localWriteCounter;
 
-        private RingBufferProducer<T>[] producers;
+        private AlignedLong[] producers;
 
         private RingBufferConsumer(RingBufferRouter<T> parent) {
             this.parent = parent;
 
             mask = parent.mask;
             data = parent.data;
-            producers = parent.producers;
+            producers = parent.producerCounters;
             readCounter = parent.readCounter;
             writeCounter = parent.writeCounter;
 
@@ -239,11 +257,11 @@ public final class RingBufferRouter<T> implements Router<T> {
 
             long readIndex = readCounter.get();
             if (readIndex >= writeIndex) {
-                RingBufferProducer<T>[] localProducers = this.producers;
+                AlignedLong[] localProducers = producers;
 
                 writeIndex = writeCounter.get();
                 for (int i = 0; i < localProducers.length; i++) {
-                    long localWriteCounterFromConsumer = localProducers[i].localWriteCounter.get();
+                    long localWriteCounterFromConsumer = localProducers[i].get();
                     if (writeIndex > localWriteCounterFromConsumer) {
                         writeIndex = localWriteCounterFromConsumer;
                     }
