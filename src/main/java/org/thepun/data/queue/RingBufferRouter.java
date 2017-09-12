@@ -10,6 +10,7 @@ public final class RingBufferRouter<T> implements Router<T> {
 
     // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
     // TODO: use unsafe array access
+    // TODO: get rid of size field
 
     private final int size;
     private final int mask;

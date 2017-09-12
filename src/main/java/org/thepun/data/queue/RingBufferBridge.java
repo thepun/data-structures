@@ -7,6 +7,7 @@ import org.thepun.unsafe.MemoryFence;
 public final class RingBufferBridge<T> implements QueueHead<T>, QueueTail<T> {
 
     // TODO: align local variables
+    // TODO: get rid of size field
 
     private final int size;
     private final int mask;

@@ -9,6 +9,7 @@ public final class GreedyRingBufferMultiplexer<T> implements Multiplexer<T> {
 
     // TODO: change 'writeIndex >= readIndex + size' to 'writeIndex - size >= readIndex'
     // TODO: align producers and variables
+    // TODO: get rid of size field
 
     private final int size;
     private final int mask;

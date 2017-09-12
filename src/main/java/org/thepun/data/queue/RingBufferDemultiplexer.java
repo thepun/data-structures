@@ -10,6 +10,7 @@ public final class RingBufferDemultiplexer<T> implements Demultiplexer<T> {
     // TODO: align consumers
     // TODO: change size to mask
     // TODO: use array of counters
+    // TODO: get rid of size field
 
     private final int size;
     private final Object[] data;
