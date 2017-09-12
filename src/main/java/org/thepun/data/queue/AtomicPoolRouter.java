@@ -7,6 +7,10 @@ import org.thepun.unsafe.MemoryFence;
 
 public final class AtomicPoolRouter<T> implements Router<T> {
 
+    // TODO: align producers/consumers
+    // TODO: get rid of size
+
+
     private static final Object DATA_REF = new Object();
     private static final Object EMPTY_REF = new Object();
     private static final Object ALMOST_DATA_REF = new Object();
@@ -46,7 +50,7 @@ public final class AtomicPoolRouter<T> implements Router<T> {
         AtomicPoolProducer<T>[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
         AtomicPoolProducer<T> producer = new AtomicPoolProducer<>(this);
         newProducers[oldProducers.length] = producer;
-        producers = newProducers;
+        updateProducers(newProducers);
         return producer;
     }
 
@@ -56,9 +60,11 @@ public final class AtomicPoolRouter<T> implements Router<T> {
         AtomicPoolConsumer<T>[] newConsumers = Arrays.copyOf(oldConsumers, oldConsumers.length + 1);
         AtomicPoolConsumer<T> consumer = new AtomicPoolConsumer<>(this);
         newConsumers[oldConsumers.length] = consumer;
-        consumers = newConsumers;
+        updateConsumers(newConsumers);
         return consumer;
     }
+
+
 
     @Override
     public synchronized void destroyProducer(QueueTail<T> producer) {
@@ -90,7 +96,7 @@ public final class AtomicPoolRouter<T> implements Router<T> {
         newProducers = new AtomicPoolProducer[oldProducers.length - 1];
         System.arraycopy(oldProducers, 0, newProducers, 0, index);
         System.arraycopy(oldProducers, index + 1, newProducers, index + 1 - 1, oldProducers.length - (index + 1));
-        producers = newProducers;
+        updateProducers(newProducers);
     }
 
     @Override
@@ -123,28 +129,52 @@ public final class AtomicPoolRouter<T> implements Router<T> {
         newConsumers = new AtomicPoolConsumer[oldConsumers.length - 1];
         System.arraycopy(oldConsumers, 0, newConsumers, 0, index);
         System.arraycopy(oldConsumers, index + 1, newConsumers, index + 1 - 1, oldConsumers.length - (index + 1));
+        updateConsumers(newConsumers);
+    }
+
+    private void updateProducers(AtomicPoolProducer<T>[] newProducers) {
+        producers = newProducers;
+
+        /*int count = newProducers.length;
+        int step = size / count;
+        for (int i = 0; i < count; i++) {
+            newProducers[i].producerWriteCounter.set(step * i);
+        }*/
+    }
+
+    private void updateConsumers(AtomicPoolConsumer<T>[] newConsumers) {
         consumers = newConsumers;
+
+        /*int count = newConsumers.length;
+        int step = size / count;
+        for (int i = 0; i < count; i++) {
+            newConsumers[i].consumerReadCounter.set(step * i);
+        }*/
     }
 
 
     private static final class AtomicPoolProducer<T> implements QueueTail<T> {
 
-        private final int size;
+        private final AtomicPoolRouter<T> parent;
+
+        // gap
+        private int t1;
+
         private final int mask;
         private final Object[] data;
-        private final AlignedLong producerWriteCounter;
 
-        private final AtomicPoolRouter<T> parent;
+        private int shift;
+        private AlignedLong producerWriteCounter;
 
         private AtomicPoolProducer(AtomicPoolRouter<T> parent) {
             this.parent = parent;
 
-            size = parent.size;
             mask = parent.mask;
             data = parent.data;
 
+            shift = 16 + (int) (Math.random() * 10);
             producerWriteCounter = new AlignedLong();
-            producerWriteCounter.set(Long.MAX_VALUE);
+            producerWriteCounter.set(0);
         }
 
         @Override
@@ -155,8 +185,9 @@ public final class AtomicPoolRouter<T> implements Router<T> {
 
             int index;
             Object atomic;
+            int localShift = shift;
             long writeIndex = localWriteCounter.get();
-            long maxWriteIndex = writeIndex + size;
+            long maxWriteIndex = writeIndex + localMask;
             do {
                 index = (int) (writeIndex & localMask) << 1;
                 atomic = ArrayMemory.getObject(localData, index);
@@ -172,13 +203,14 @@ public final class AtomicPoolRouter<T> implements Router<T> {
                 } else if (atomic == ALMOST_EMPTY_REF) {
                     continue;
                 } else if (atomic == ALMOST_DATA_REF) {
-                    writeIndex += 16;
+                    writeIndex += localShift;
                     continue;
                 }
 
                 writeIndex++;
             } while (writeIndex < maxWriteIndex);
 
+            localWriteCounter.set(writeIndex);
             return false;
         }
     }
@@ -186,12 +218,13 @@ public final class AtomicPoolRouter<T> implements Router<T> {
 
     private static final class AtomicPoolConsumer<T> implements QueueHead<T> {
 
+        private final AtomicPoolRouter<T> parent;
+
         private final int size;
         private final int mask;
         private final Object[] data;
-        private final AlignedLong consumerReadCounter;
 
-        private final AtomicPoolRouter<T> parent;
+        private AlignedLong consumerReadCounter;
 
         private AtomicPoolConsumer(AtomicPoolRouter<T> parent) {
             this.parent = parent;
@@ -201,7 +234,7 @@ public final class AtomicPoolRouter<T> implements Router<T> {
             data = parent.data;
 
             consumerReadCounter = new AlignedLong();
-            consumerReadCounter.set(Long.MAX_VALUE);
+            consumerReadCounter.set(0);
         }
 
         @Override
@@ -236,6 +269,7 @@ public final class AtomicPoolRouter<T> implements Router<T> {
                 readIndex++;
             } while (readIndex < maxReadIndex);
 
+            localReadCounter.set(readIndex);
             return null;
         }
     }
