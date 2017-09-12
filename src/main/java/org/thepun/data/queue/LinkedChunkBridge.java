@@ -38,14 +38,14 @@ public final class LinkedChunkBridge<T> implements QueueHead<T>, QueueTail<T> {
     private static final Object[] LINKED_NULLS_BUNCH = new Object[LINKED_BUNCH_SIZE];
 
 
-    private final AlignedBunchReference head;
-    private final AlignedBunchReference tail;
+    private final AlignedBunch head;
+    private final AlignedBunch tail;
     private final AtomicReference<Object[]> emptyChain;
 
     public LinkedChunkBridge() {
         Object[] firstBunch = new Object[LINKED_BUNCH_SIZE];
-        head = new AlignedBunchReference();
-        tail = new AlignedBunchReference();
+        head = new AlignedBunch();
+        tail = new AlignedBunch();
         head.bunch = firstBunch;
         tail.bunch = firstBunch;
         head.index = LINKED_FIRST_ITEM_INDEX;

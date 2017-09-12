@@ -3,7 +3,7 @@ package org.thepun.data.queue;
 /**
  *  Aligned data structure for lesser false sharing
  */
-final class AlignedBunchReference {
+final class AlignedBunch {
     // 12 bytes header
 
     // 44 bytes gap before

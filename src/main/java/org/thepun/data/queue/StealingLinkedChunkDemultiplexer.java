@@ -100,7 +100,7 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
         int numberOfConsumers = localConsumers.length;
 
         StealingConsumer<T> consumer = localConsumers[localNextConsumerIndex % numberOfConsumers];
-        AlignedBunchReference currentWriteNode = consumer.currentWriteNode;
+        AlignedBunch currentWriteNode = consumer.currentWriteNode;
         Object[] currentBunch = currentWriteNode.bunch;
         int currentIndex = currentWriteNode.index;
         if (currentIndex == LINKED_FIRST_OFFSET_INDEX) {
@@ -137,8 +137,8 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
         private final StealingLinkedChunkDemultiplexer<T> parent;
 
         private final AlignedLong nextConsumerToStealFrom;
-        private final AlignedBunchReference currentReadNode;
-        private final AlignedBunchReference currentWriteNode;
+        private final AlignedBunch currentReadNode;
+        private final AlignedBunch currentWriteNode;
         private final AtomicReference<Object[]> emptyChain;
 
         private StealingConsumer<T>[] consumers;
@@ -149,8 +149,8 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
             emptyChain = parent.globalEmptyChain;
 
             Object[] firstBunch = new Object[LINKED_BUNCH_SIZE];
-            currentReadNode = new AlignedBunchReference();
-            currentWriteNode = new AlignedBunchReference();
+            currentReadNode = new AlignedBunch();
+            currentWriteNode = new AlignedBunch();
             currentReadNode.index = LINKED_FIRST_ITEM_INDEX;
             currentWriteNode.index = LINKED_FIRST_ITEM_INDEX;
             currentReadNode.bunch = firstBunch;
@@ -161,7 +161,7 @@ public final class StealingLinkedChunkDemultiplexer<T> implements Demultiplexer<
 
         @Override
         public T removeFromHead() {
-            AlignedBunchReference currentNode = currentReadNode;
+            AlignedBunch currentNode = currentReadNode;
             int currentIndex = currentNode.index;
             Object[] currentBunch = currentNode.bunch;
 
