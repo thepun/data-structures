@@ -93,6 +93,18 @@ public class FourThreadDemultiplexerBenchmark {
     }
 
     @Benchmark
+    public long atomicPool() throws InterruptedException {
+        AtomicPoolRouter<Long> queue = new AtomicPoolRouter<>(10000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+        queueHeads[2] = queue.createConsumer();
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long arrayBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 

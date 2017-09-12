@@ -127,8 +127,11 @@ public class OrderCorrectnessTest {
         /*GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
         list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});*/
 
-        GreedyRingBufferMultiplexer<Long> longLinkedArrayMultiplexer = new GreedyRingBufferMultiplexer<>(10000000);
-        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
+        /*GreedyRingBufferMultiplexer<Long> longLinkedArrayMultiplexer = new GreedyRingBufferMultiplexer<>(10000000);
+        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});*/
+
+        AtomicPoolRouter<Long> arrayPool = new AtomicPoolRouter<>(10000000);
+        list.add(new Object[] {arrayPool.createProducer(), arrayPool.createConsumer()});
 
         return list;
     }

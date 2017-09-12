@@ -89,6 +89,12 @@ public class TwoThreadBenchmark {
     }
 
     @Benchmark
+    public long atomicPool() throws InterruptedException {
+        AtomicPoolRouter<Long> queue = new AtomicPoolRouter<>(10000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long arrayBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
