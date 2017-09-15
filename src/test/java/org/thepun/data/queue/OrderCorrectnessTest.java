@@ -130,8 +130,11 @@ public class OrderCorrectnessTest {
         /*GreedyRingBufferMultiplexer<Long> longLinkedArrayMultiplexer = new GreedyRingBufferMultiplexer<>(10000000);
         list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});*/
 
-        AtomicPoolRouter<Long> arrayPool = new AtomicPoolRouter<>(10000000);
-        list.add(new Object[] {arrayPool.createProducer(), arrayPool.createConsumer()});
+        /*AtomicPoolRouter<Long> arrayPool = new AtomicPoolRouter<>(10000000);
+        list.add(new Object[] {arrayPool.createProducer(), arrayPool.createConsumer()});*/
+
+        OptimisticRingBufferRouter<Long> arrayQueue = new OptimisticRingBufferRouter<>(10000000);
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
         return list;
     }

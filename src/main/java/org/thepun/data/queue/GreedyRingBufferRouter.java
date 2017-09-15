@@ -205,8 +205,8 @@ public final class GreedyRingBufferRouter<T> implements Router<T> {
             if (writeIndex >= readIndex + size) {
                 AlignedLong[] localConsumers = consumers;
 
-                readIndex = readCounter.get();
-                for (int i = 0; i < localConsumers.length; i++) {
+                readIndex = localConsumers[0].get(); //readCounter.get();
+                for (int i = 1; i < localConsumers.length; i++) {
                     long localReadCounterFromConsumer = localConsumers[i].get();
                     if (readIndex > localReadCounterFromConsumer) {
                         readIndex = localReadCounterFromConsumer;
@@ -253,14 +253,14 @@ public final class GreedyRingBufferRouter<T> implements Router<T> {
             writeCounter = parent.writeCounter;
 
             localReadCounter = new AlignedLong();
-            localReadCounter.set(Long.MAX_VALUE);
+            localReadCounter.set(0);
         }
 
         @Override
         public T removeFromHead() {
             long writeIndex = localWriteCounter;
 
-            long readIndex = readCounter.get();
+            long readIndex = localReadCounter.get();
             if (readIndex >= writeIndex) {
                 AlignedLong[] localProducers = producers;
 
@@ -284,7 +284,7 @@ public final class GreedyRingBufferRouter<T> implements Router<T> {
                 readIndex = readCounter.get();
 
                 if (readIndex >= writeIndex) {
-                    localReadCounter.set(Long.MAX_VALUE);
+                    localReadCounter.set(readIndex);
                     return null;
                 }
             }
@@ -293,7 +293,7 @@ public final class GreedyRingBufferRouter<T> implements Router<T> {
             Object element = ArrayMemory.getObject(data, index);
             MemoryFence.load();
 
-            localReadCounter.set(Long.MAX_VALUE);
+            localReadCounter.set(readIndex + 1);
             return (T) element;
         }
     }

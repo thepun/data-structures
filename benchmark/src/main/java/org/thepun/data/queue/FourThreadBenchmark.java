@@ -182,7 +182,7 @@ public class FourThreadBenchmark {
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.ringBufferRouter();
+            benchmark.optimisticRingBufferRouter();
             System.out.println("next");
         }
     }*/

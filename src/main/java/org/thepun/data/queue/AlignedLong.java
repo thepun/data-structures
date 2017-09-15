@@ -10,34 +10,15 @@ import org.thepun.unsafe.ObjectMemoryLayout;
  *
  * Provides Compare-and-Swap (CAS) operation.
  */
-final class AlignedLong {
+final class AlignedLong extends AlignedLongFields {
 
-    private static final long valueOffset;
+    static final long valueOffset;
     static {
-        valueOffset = ObjectMemoryLayout.getFieldOffset(AlignedLong.class, "value");
+        valueOffset = ObjectMemoryLayout.getFieldOffset(AlignedLongFields.class, "value");
     }
 
-
-    // 12 bytes header
-    // 52 bytes gap before
-    private int before1, before2,
-            before3, before4, before5,
-            before6, before7, before8,
-            before9, before10, before11,
-            before12, before13;
-
-    // non-volatile field to store current value
-    private long value;
-
     // 56 bytes gap
-    private long after1, after2,
-            after3, after4, after5,
-            after6, after7;
-
-    // 64 bytes gap
-    private long after8, after9,
-            after10, after11, after12,
-            after13, after14, after15;
+    private long t1, t2, t3, t4, t5, t6, t7, t8;
 
 
     long get() {
@@ -56,3 +37,21 @@ final class AlignedLong {
         return ObjectMemory.getAndIncrementLong(this, valueOffset, 1L);
     }
 }
+
+class AlignedLongPadding {
+    // 12 bytes header
+
+    // 4 byte gap
+    private int t0;
+
+    // 48 byte gap
+    private long t1, t2, t3, t4, t5, t6;
+}
+
+class AlignedLongFields extends AlignedLongPadding {
+
+    // non-volatile field to store current value
+    long value;
+
+}
+
