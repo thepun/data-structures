@@ -11,19 +11,13 @@ public final class AtomicBufferRouter<T> implements Router<T> {
     // TODO: get rid of size
 
 
-    private static final Object DATA_REF = new Object();
-    private static final Object EMPTY_REF = new Object();
-    private static final Object ALMOST_DATA_REF = new Object();
-    private static final Object ALMOST_EMPTY_REF = new Object();
-
-
-
     private final int size;
     private final int mask;
+    private final long[] index;
     private final Object[] data;
 
-    private AtomicPoolConsumer<T>[] consumers;
-    private AtomicPoolProducer<T>[] producers;
+    private AtomicBufferConsumer<T>[] consumers;
+    private AtomicBufferProducer<T>[] producers;
 
     public AtomicBufferRouter(int bufferSize) {
         if (bufferSize < 1) {
@@ -35,20 +29,21 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
         size = (int) Math.pow(2, pow);
         mask = size - 1;
-        data = new Object[size * 2];
-        consumers = new AtomicPoolConsumer[0];
-        producers = new AtomicPoolProducer[0];
+        data = new Object[size];
+        index = new long[size];
+        consumers = new AtomicBufferConsumer[0];
+        producers = new AtomicBufferProducer[0];
 
         for (int i = 0; i < size; i++) {
-            ArrayMemory.setObject(data, i << 1, EMPTY_REF);
+            ArrayMemory.setLong(index, i, i + 2);
         }
     }
 
     @Override
     public synchronized QueueTail<T> createProducer() {
-        AtomicPoolProducer<T>[] oldProducers = producers;
-        AtomicPoolProducer<T>[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
-        AtomicPoolProducer<T> producer = new AtomicPoolProducer<>(this);
+        AtomicBufferProducer<T>[] oldProducers = producers;
+        AtomicBufferProducer<T>[] newProducers = Arrays.copyOf(oldProducers, oldProducers.length + 1);
+        AtomicBufferProducer<T> producer = new AtomicBufferProducer<>(this);
         newProducers[oldProducers.length] = producer;
         updateProducers(newProducers);
         return producer;
@@ -56,29 +51,27 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
     @Override
     public synchronized QueueHead<T> createConsumer() {
-        AtomicPoolConsumer<T>[] oldConsumers = consumers;
-        AtomicPoolConsumer<T>[] newConsumers = Arrays.copyOf(oldConsumers, oldConsumers.length + 1);
-        AtomicPoolConsumer<T> consumer = new AtomicPoolConsumer<>(this);
+        AtomicBufferConsumer<T>[] oldConsumers = consumers;
+        AtomicBufferConsumer<T>[] newConsumers = Arrays.copyOf(oldConsumers, oldConsumers.length + 1);
+        AtomicBufferConsumer<T> consumer = new AtomicBufferConsumer<>(this);
         newConsumers[oldConsumers.length] = consumer;
         updateConsumers(newConsumers);
         return consumer;
     }
 
-
-
     @Override
     public synchronized void destroyProducer(QueueTail<T> producer) {
-        if (!(producer instanceof AtomicBufferRouter.AtomicPoolProducer)) {
+        if (!(producer instanceof AtomicBufferProducer)) {
             throw new IllegalArgumentException("Wrong producer");
         }
 
-        AtomicPoolProducer<T> producerSubqueue = (AtomicPoolProducer<T>) producer;
+        AtomicBufferProducer<T> producerSubqueue = (AtomicBufferProducer<T>) producer;
         if (producerSubqueue.parent != this) {
             throw new IllegalArgumentException("Producer from another router");
         }
 
-        AtomicPoolProducer<T>[] newProducers;
-        AtomicPoolProducer<T>[] oldProducers;
+        AtomicBufferProducer<T>[] newProducers;
+        AtomicBufferProducer<T>[] oldProducers;
 
         oldProducers = producers;
         int index = -1;
@@ -93,7 +86,7 @@ public final class AtomicBufferRouter<T> implements Router<T> {
             throw new IllegalArgumentException("Producer not found");
         }
 
-        newProducers = new AtomicPoolProducer[oldProducers.length - 1];
+        newProducers = new AtomicBufferProducer[oldProducers.length - 1];
         System.arraycopy(oldProducers, 0, newProducers, 0, index);
         System.arraycopy(oldProducers, index + 1, newProducers, index + 1 - 1, oldProducers.length - (index + 1));
         updateProducers(newProducers);
@@ -101,17 +94,17 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
     @Override
     public synchronized void destroyConsumer(QueueHead<T> consumer) {
-        if (!(consumer instanceof AtomicBufferRouter.AtomicPoolConsumer)) {
+        if (!(consumer instanceof AtomicBufferConsumer)) {
             throw new IllegalArgumentException("Wrong consumer");
         }
 
-        AtomicPoolConsumer<T> producerSubqueue = (AtomicPoolConsumer<T>) consumer;
+        AtomicBufferConsumer<T> producerSubqueue = (AtomicBufferConsumer<T>) consumer;
         if (producerSubqueue.parent != this) {
             throw new IllegalArgumentException("Consumer from another router");
         }
 
-        AtomicPoolConsumer<T>[] newConsumers;
-        AtomicPoolConsumer<T>[] oldConsumers;
+        AtomicBufferConsumer<T>[] newConsumers;
+        AtomicBufferConsumer<T>[] oldConsumers;
 
         oldConsumers = consumers;
         int index = -1;
@@ -126,13 +119,13 @@ public final class AtomicBufferRouter<T> implements Router<T> {
             throw new IllegalArgumentException("Consumer not found");
         }
 
-        newConsumers = new AtomicPoolConsumer[oldConsumers.length - 1];
+        newConsumers = new AtomicBufferConsumer[oldConsumers.length - 1];
         System.arraycopy(oldConsumers, 0, newConsumers, 0, index);
         System.arraycopy(oldConsumers, index + 1, newConsumers, index + 1 - 1, oldConsumers.length - (index + 1));
         updateConsumers(newConsumers);
     }
 
-    private void updateProducers(AtomicPoolProducer<T>[] newProducers) {
+    private void updateProducers(AtomicBufferProducer<T>[] newProducers) {
         producers = newProducers;
 
         /*int count = newProducers.length;
@@ -142,7 +135,7 @@ public final class AtomicBufferRouter<T> implements Router<T> {
         }*/
     }
 
-    private void updateConsumers(AtomicPoolConsumer<T>[] newConsumers) {
+    private void updateConsumers(AtomicBufferConsumer<T>[] newConsumers) {
         consumers = newConsumers;
 
         /*int count = newConsumers.length;
@@ -153,85 +146,70 @@ public final class AtomicBufferRouter<T> implements Router<T> {
     }
 
 
-    private static final class AtomicPoolProducer<T> implements QueueTail<T> {
+    private static final class AtomicBufferProducer<T> implements QueueTail<T> {
 
         private final AtomicBufferRouter<T> parent;
 
-        // gap
-        private int t1;
-
         private final int mask;
+        private final long[] index;
         private final Object[] data;
 
-        private int shift;
         private AlignedLong producerWriteCounter;
 
-        private AtomicPoolProducer(AtomicBufferRouter<T> parent) {
+        private AtomicBufferProducer(AtomicBufferRouter<T> parent) {
             this.parent = parent;
 
             mask = parent.mask;
             data = parent.data;
+            index = parent.index;
 
-            shift = 16 + (int) (Math.random() * 10);
             producerWriteCounter = new AlignedLong();
             producerWriteCounter.set(0);
         }
 
         @Override
         public boolean addToTail(T element) {
-            int localMask = mask;
-            Object[] localData = data;
-            AlignedLong localWriteCounter = producerWriteCounter;
+            long localWriteCounter = producerWriteCounter.get();
 
-            int index;
-            Object atomic;
-            int localShift = shift;
-            long writeIndex = localWriteCounter.get();
-            long maxWriteIndex = writeIndex + localMask;
-            do {
-                index = (int) (writeIndex & localMask) << 1;
-                atomic = ArrayMemory.getObject(localData, index);
-
-                if (atomic == EMPTY_REF) {
-                    if (ArrayMemory.compareAndSwapObject(localData, index, EMPTY_REF, ALMOST_DATA_REF)) {
-                        ArrayMemory.setObject(localData, index | 1, element);
-                        MemoryFence.store();
-                        ArrayMemory.setObject(localData, index, DATA_REF);
-                        localWriteCounter.set(writeIndex);
-                        return true;
-                    }
-                } else if (atomic == ALMOST_EMPTY_REF) {
+            int i = (int) (localWriteCounter & mask);
+            long k;
+            for (;;) {
+                k = ArrayMemory.getLong(index, i);
+                if (k == localWriteCounter) {
+                    // do nothing
+                } else if (k == localWriteCounter + 1) {
                     continue;
-                } else if (atomic == ALMOST_DATA_REF) {
-                    writeIndex += localShift;
-                    continue;
+                } else if (k < localWriteCounter) {
+                    return false;
+                } else if (ArrayMemory.compareAndSwapLong(index, i, k, localWriteCounter)) {
+                    producerWriteCounter.set(localWriteCounter + 1);
+                    ArrayMemory.setObject(data, i, element);
+                    return true;
                 }
 
-                writeIndex++;
-            } while (writeIndex < maxWriteIndex);
-
-            localWriteCounter.set(writeIndex);
-            return false;
+                localWriteCounter += 1;
+                i = (int) (localWriteCounter & mask);
+            }
         }
     }
 
 
-    private static final class AtomicPoolConsumer<T> implements QueueHead<T> {
+    private static final class AtomicBufferConsumer<T> implements QueueHead<T> {
 
         private final AtomicBufferRouter<T> parent;
 
-        private final int size;
         private final int mask;
+        private final long[] index;
         private final Object[] data;
 
         private AlignedLong consumerReadCounter;
 
-        private AtomicPoolConsumer(AtomicBufferRouter<T> parent) {
+        private AtomicBufferConsumer(AtomicBufferRouter<T> parent) {
             this.parent = parent;
 
-            size = parent.size;
             mask = parent.mask;
             data = parent.data;
+            index = parent.index;
 
             consumerReadCounter = new AlignedLong();
             consumerReadCounter.set(0);
@@ -239,38 +217,27 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
         @Override
         public T removeFromHead() {
-            int localMask = mask;
-            Object[] localData = data;
-            AlignedLong localReadCounter = consumerReadCounter;
+            long localReadCounter = consumerReadCounter.get();
 
-            int index;
-            Object atomic;
-            long readIndex = localReadCounter.get();
-            long maxReadIndex = readIndex + size;
-            do {
-                index = (int) (readIndex & localMask) << 1;
-                atomic = ArrayMemory.getObject(localData, index);
-
-                if (atomic == DATA_REF) {
-                    if (ArrayMemory.compareAndSwapObject(localData, index, DATA_REF, ALMOST_EMPTY_REF)) {
-                        Object element = ArrayMemory.getObject(localData, index | 1);
-                        MemoryFence.load();
-                        ArrayMemory.setObject(localData, index, EMPTY_REF);
-                        localReadCounter.set(readIndex);
-                        return (T) element;
-                    }
-                } else if (atomic == ALMOST_DATA_REF) {
-                    continue;
-                } else if (atomic == ALMOST_EMPTY_REF) {
-                    readIndex += 16;
-                    continue;
+            int i = (int) (localReadCounter & mask);
+            long k;
+            for (;;) {
+                k = ArrayMemory.getLong(index, i);
+                if (k > localReadCounter) {
+                    // do nothing
+                } else if (k < localReadCounter) {
+                    return null;
+                } else if (ArrayMemory.compareAndSwapLong(index, i, k, localReadCounter + mask + 2)) {
+                    T element = (T) ArrayMemory.getObject(data, i);
+                    MemoryFence.load();
+                    ArrayMemory.setLong(index, i, localReadCounter + mask + 3);
+                    consumerReadCounter.set(localReadCounter + 1);
+                    return element;
                 }
 
-                readIndex++;
-            } while (readIndex < maxReadIndex);
-
-            localReadCounter.set(readIndex);
-            return null;
+                localReadCounter += 1;
+                i = (int) (localReadCounter & mask);
+            }
         }
     }
 }

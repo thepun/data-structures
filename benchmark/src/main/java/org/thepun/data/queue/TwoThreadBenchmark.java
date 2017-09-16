@@ -95,6 +95,12 @@ public class TwoThreadBenchmark {
     }
 
     @Benchmark
+    public long atomicBuffer() throws InterruptedException {
+        AtomicBufferRouter<Long> queue = new AtomicBufferRouter<>(10000);
+        return BenchmarkCases.singleProducerAndSingleConsumer(queue.createConsumer(), queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long arrayBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
@@ -154,13 +160,13 @@ public class TwoThreadBenchmark {
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 
-    /*public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         while (true) {
             TwoThreadBenchmark benchmark = new TwoThreadBenchmark();
             benchmark.prepareValues();
-            benchmark.stealingLinkedChunkDemultiplexer();
+            benchmark.atomicBuffer();
 
             System.out.println("next");
         }
-    }*/
+    }
 }
