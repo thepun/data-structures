@@ -160,7 +160,7 @@ public class TwoThreadBenchmark {
         return BenchmarkCases.singleProducerAndSingleConsumer(queue, queue, values, 100_000_000);
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    /*public static void main(String[] args) throws InterruptedException {
         while (true) {
             TwoThreadBenchmark benchmark = new TwoThreadBenchmark();
             benchmark.prepareValues();
@@ -168,5 +168,5 @@ public class TwoThreadBenchmark {
 
             System.out.println("next");
         }
-    }
+    }*/
 }

@@ -11,9 +11,14 @@ public final class AtomicBufferRouter<T> implements Router<T> {
     // TODO: get rid of size
 
 
+    private static final Object DATA = new Object();
+    private static final Object EMPTY = new Object();
+    private static final Object PULLING = new Object();
+    private static final Object PUSHING = new Object();
+
+
     private final int size;
     private final int mask;
-    private final long[] index;
     private final Object[] data;
 
     private AtomicBufferConsumer<T>[] consumers;
@@ -29,13 +34,13 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
         size = (int) Math.pow(2, pow);
         mask = size - 1;
-        data = new Object[size];
-        index = new long[size];
+        data = new Object[size * 2];
         consumers = new AtomicBufferConsumer[0];
         producers = new AtomicBufferProducer[0];
 
         for (int i = 0; i < size; i++) {
-            ArrayMemory.setLong(index, i, i + 2);
+            ArrayMemory.setObject(data, i * 2, EMPTY);
+            ArrayMemory.setObject(data, i * 2 + 1, null);
         }
     }
 
@@ -128,6 +133,10 @@ public final class AtomicBufferRouter<T> implements Router<T> {
     private void updateProducers(AtomicBufferProducer<T>[] newProducers) {
         producers = newProducers;
 
+        for (int i = 0; i < consumers.length; i++) {
+            consumers[i].producers = newProducers;
+        }
+
         /*int count = newProducers.length;
         int step = size / count;
         for (int i = 0; i < count; i++) {
@@ -137,6 +146,10 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
     private void updateConsumers(AtomicBufferConsumer<T>[] newConsumers) {
         consumers = newConsumers;
+
+        for (int i = 0; i < producers.length; i++) {
+            producers[i].consumers = newConsumers;
+        }
 
         /*int count = newConsumers.length;
         int step = size / count;
@@ -150,45 +163,69 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
         private final AtomicBufferRouter<T> parent;
 
+        private final int size;
         private final int mask;
-        private final long[] index;
         private final Object[] data;
 
-        private AlignedLong producerWriteCounter;
+        private AtomicBufferConsumer<T>[] consumers;
+
+        private AlignedLong readCounter;
+        private AlignedLong writeCounter;
 
         private AtomicBufferProducer(AtomicBufferRouter<T> parent) {
             this.parent = parent;
 
+            size = parent.size;
             mask = parent.mask;
             data = parent.data;
-            index = parent.index;
+            consumers = parent.consumers;
 
-            producerWriteCounter = new AlignedLong();
-            producerWriteCounter.set(0);
+            writeCounter = new AlignedLong();
+            writeCounter.set(0);
+
+            readCounter = new AlignedLong();
+            readCounter.set(0);
         }
 
         @Override
         public boolean addToTail(T element) {
-            long localWriteCounter = producerWriteCounter.get();
+            long localReadIndex = readCounter.get();
+            long localWriteIndex = writeCounter.get();
 
-            int i = (int) (localWriteCounter & mask);
-            long k;
+            int index;
+            Object lock;
             for (;;) {
-                k = ArrayMemory.getLong(index, i);
-                if (k == localWriteCounter) {
-                    // do nothing
-                } else if (k == localWriteCounter + 1) {
-                    continue;
-                } else if (k < localWriteCounter) {
-                    return false;
-                } else if (ArrayMemory.compareAndSwapLong(index, i, k, localWriteCounter)) {
-                    producerWriteCounter.set(localWriteCounter + 1);
-                    ArrayMemory.setObject(data, i, element);
-                    return true;
+                if (localWriteIndex >= localReadIndex + size) {
+                    localReadIndex = consumers[0].readCounter.get();
+
+                    for (int i = 1; i < consumers.length; i++) {
+                        long readIndexFromConsumer = consumers[i].readCounter.get();
+                        if (localReadIndex > readIndexFromConsumer) {
+                            localReadIndex = readIndexFromConsumer;
+                        }
+                    }
+
+                    if (localWriteIndex >= localReadIndex + size) {
+                        return false;
+                    } else {
+                        readCounter.set(localReadIndex);
+                    }
                 }
 
-                localWriteCounter += 1;
-                i = (int) (localWriteCounter & mask);
+                index = ((int) (localWriteIndex & mask)) << 1;
+                lock = data[index];
+
+                if (lock == EMPTY && ArrayMemory.compareAndSwapObject(data, index, EMPTY, DATA)) {
+                    ArrayMemory.setObject(data, index + 1, element);
+                    MemoryFence.store();
+                    writeCounter.set(localWriteIndex + 1);
+                    return true;
+                } else if (lock == PULLING) {
+                    continue;
+                }
+
+                localWriteIndex++;
+                writeCounter.set(localWriteIndex);
             }
         }
     }
@@ -199,44 +236,48 @@ public final class AtomicBufferRouter<T> implements Router<T> {
         private final AtomicBufferRouter<T> parent;
 
         private final int mask;
-        private final long[] index;
         private final Object[] data;
 
-        private AlignedLong consumerReadCounter;
+        private AtomicBufferProducer<T>[] producers;
+
+        private AlignedLong readCounter;
+        private AlignedLong writeCounter;
 
         private AtomicBufferConsumer(AtomicBufferRouter<T> parent) {
             this.parent = parent;
 
             mask = parent.mask;
             data = parent.data;
-            index = parent.index;
+            producers = parent.producers;
 
-            consumerReadCounter = new AlignedLong();
-            consumerReadCounter.set(0);
+            readCounter = new AlignedLong();
+            readCounter.set(0);
+
+            writeCounter = new AlignedLong();
+            writeCounter.set(0);
         }
 
         @Override
         public T removeFromHead() {
-            long localReadCounter = consumerReadCounter.get();
+            long localReadIndex = readCounter.get();
 
-            int i = (int) (localReadCounter & mask);
-            long k;
+            int index;
+            Object lock;
             for (;;) {
-                k = ArrayMemory.getLong(index, i);
-                if (k > localReadCounter) {
-                    // do nothing
-                } else if (k < localReadCounter) {
-                    return null;
-                } else if (ArrayMemory.compareAndSwapLong(index, i, k, localReadCounter + mask + 2)) {
-                    T element = (T) ArrayMemory.getObject(data, i);
+                index = ((int) (localReadIndex & mask)) << 1;
+                lock = data[index];
+
+                if (lock == PUSHING) {
+                    continue;
+                } else if (lock == DATA && ArrayMemory.compareAndSwapObject(data, index, DATA, EMPTY)) {
+                    Object element = ArrayMemory.getObject(data, index + 1);
                     MemoryFence.load();
-                    ArrayMemory.setLong(index, i, localReadCounter + mask + 3);
-                    consumerReadCounter.set(localReadCounter + 1);
-                    return element;
+                    readCounter.set(localReadIndex + 1);
+                    return (T) element;
                 }
 
-                localReadCounter += 1;
-                i = (int) (localReadCounter & mask);
+                localReadIndex++;
+                readCounter.set(localReadIndex);
             }
         }
     }

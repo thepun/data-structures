@@ -28,10 +28,12 @@ import org.openjdk.jmh.annotations.Warmup;
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class MultiThreadBenchmark {
 
-    @Param({"16", "8", "4", "2"})
+    //@Param({"16", "8", "4", "2"})
+    @Param({"4"})
     private int cpu;
 
-    @Param({"8", "4", "2", "1"})
+//    @Param({"8", "4", "2", "1"})
+    @Param({"2"})
     private int halfCpu;
 
     private Long[] values;
@@ -86,6 +88,23 @@ public class MultiThreadBenchmark {
     @Benchmark
     public long atomicPool() throws InterruptedException {
         AtomicPoolRouter<Long> queue = new AtomicPoolRouter<>(10000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[halfCpu];
+        for (int i = 0; i < halfCpu; i++) {
+            queueHeads[i] = queue.createConsumer();
+        }
+
+        QueueTail<Long>[] queueTails = new QueueTail[halfCpu];
+        for (int i = 0; i < halfCpu; i++) {
+            queueTails[i] = queue.createProducer();
+        }
+
+        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
+    }
+
+    @Benchmark
+    public long atomicBuffer() throws InterruptedException {
+        AtomicBufferRouter<Long> queue = new AtomicBufferRouter<>(10000);
 
         QueueHead<Long>[] queueHeads = new QueueHead[halfCpu];
         for (int i = 0; i < halfCpu; i++) {
@@ -202,13 +221,15 @@ public class MultiThreadBenchmark {
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
     }
 
-   /*public static void main(String[] args) throws InterruptedException {
-        FourThreadBenchmark benchmark = new FourThreadBenchmark();
+   public static void main(String[] args) throws InterruptedException {
+        MultiThreadBenchmark benchmark = new MultiThreadBenchmark();
 
         while (true) {
             benchmark.prepareValues();
-            benchmark.ringBufferRouter();
+            benchmark.cpu = 4;
+            benchmark.halfCpu = 2;
+            benchmark.atomicBuffer();
             System.out.println("next");
         }
-    }*/
+    }
 }
