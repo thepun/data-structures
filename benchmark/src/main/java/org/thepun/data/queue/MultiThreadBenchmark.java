@@ -221,7 +221,7 @@ public class MultiThreadBenchmark {
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
     }
 
-   public static void main(String[] args) throws InterruptedException {
+   /*public static void main(String[] args) throws InterruptedException {
         MultiThreadBenchmark benchmark = new MultiThreadBenchmark();
 
         while (true) {
@@ -231,5 +231,5 @@ public class MultiThreadBenchmark {
             benchmark.atomicBuffer();
             System.out.println("next");
         }
-    }
+    }*/
 }
