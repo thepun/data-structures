@@ -20,8 +20,8 @@ import org.openjdk.jmh.annotations.Warmup;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 10, batchSize = 1)
-@Measurement(iterations = 10, batchSize = 1)
+@Warmup(iterations = 1, batchSize = 1)
+@Measurement(iterations = 1, batchSize = 1)
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class MultiThreadBenchmark {
 
@@ -29,14 +29,14 @@ public class MultiThreadBenchmark {
     //@Param({"4"})
     private int cpu;
 
-    @Param({"8", "4", "2", "1"})
-    //@Param({"2"})
     private int halfCpu;
 
     private Long[] values;
 
     @Setup(Level.Iteration)
     public void prepareValues() {
+        halfCpu = cpu / 2;
+
         values = new Long[1_000_000];
         for (int l = 0; l < 1_000_000; l++) {
             values[l] = new Long(l);
