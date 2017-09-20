@@ -1,8 +1,5 @@
 package org.thepun.data.queue;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
 import org.jctools.queues.MpmcArrayQueue;
@@ -28,12 +25,12 @@ import org.openjdk.jmh.annotations.Warmup;
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class MultiThreadBenchmark {
 
-    //@Param({"16", "8", "4", "2"})
-    @Param({"4"})
+    @Param({"16", "8", "4", "2"})
+    //@Param({"4"})
     private int cpu;
 
-//    @Param({"8", "4", "2", "1"})
-    @Param({"2"})
+    @Param({"8", "4", "2", "1"})
+    //@Param({"2"})
     private int halfCpu;
 
     private Long[] values;
@@ -119,7 +116,7 @@ public class MultiThreadBenchmark {
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
     }
 
-    @Benchmark
+    /*@Benchmark
     public long arraydBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 
@@ -134,9 +131,9 @@ public class MultiThreadBenchmark {
         }
 
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }
+    }*/
 
-    @Benchmark
+    /*@Benchmark
     public long linkedBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedBlockingQueue<>());
 
@@ -151,9 +148,9 @@ public class MultiThreadBenchmark {
         }
 
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }
+    }*/
 
-    @Benchmark
+    /*@Benchmark
     public long concurrentLinkedQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ConcurrentLinkedQueue<>());
 
@@ -168,7 +165,7 @@ public class MultiThreadBenchmark {
         }
 
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }
+    }*/
 
     @Benchmark
     public long linkedTransferQueue() throws InterruptedException {
