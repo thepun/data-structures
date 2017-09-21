@@ -15,8 +15,8 @@ import org.openjdk.jmh.annotations.Warmup;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 10, batchSize = 1)
-@Measurement(iterations = 10, batchSize = 1)
+@Warmup(iterations = 3, batchSize = 1)
+@Measurement(iterations = 3, batchSize = 1)
 public class CASBenchmark {
 
     private static final int N = 10 * 1024 * 1024;
@@ -412,3 +412,30 @@ public class CASBenchmark {
         }
     }
 }
+
+/*
+    ---------------------------------------------------------
+
+    AMD Ryzen 7 1700
+    8 cores (16 threads)
+
+    Benchmark                Mode  Cnt   Score   Error  Units
+
+    CASBenchmark.oneCas_16   avgt   30  12.804 ± 0.768   s/op
+    CASBenchmark.twoCas_16   avgt   30   3.173 ± 0.241   s/op
+    CASBenchmark.fourCas_16  avgt   30   1.280 ± 0.109   s/op
+
+    CASBenchmark.oneFad_16   avgt   30   3.305 ± 0.011   s/op
+    CASBenchmark.twoFad_16   avgt   30   1.595 ± 0.032   s/op
+    CASBenchmark.fourFad_16  avgt   30   0.790 ± 0.012   s/op
+
+    CASBenchmark.oneCas_8    avgt   30   3.062 ± 0.260   s/op
+    CASBenchmark.twoCas_8    avgt   30   1.053 ± 0.174   s/op
+    CASBenchmark.fourCas_8   avgt   30   0.421 ± 0.035   s/op
+
+    CASBenchmark.oneFad_8    avgt   30   1.598 ± 0.018   s/op
+    CASBenchmark.twoFad_8    avgt   30   0.713 ± 0.024   s/op
+    CASBenchmark.fourFad_8   avgt   30   0.326 ± 0.004   s/op
+
+    ---------------------------------------------------------
+*/
