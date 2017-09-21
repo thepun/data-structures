@@ -26,8 +26,8 @@ import org.openjdk.jmh.annotations.Warmup;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
-@Warmup(iterations = 10, batchSize = 1)
-@Measurement(iterations = 10, batchSize = 1)
+@Warmup(iterations = 1, batchSize = 1)
+@Measurement(iterations = 1, batchSize = 1)
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class TwoThreadBenchmark {
 
