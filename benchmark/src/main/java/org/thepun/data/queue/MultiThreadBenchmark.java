@@ -230,3 +230,32 @@ public class MultiThreadBenchmark {
         }
     }*/
 }
+
+
+
+/*
+    ------------------------------------------------------------------------------------
+
+    AMD Ryzen 7 1700
+    8 cores (16 threads)
+
+    Benchmark                                    (cpu)  Mode  Cnt   Score   Error  Units
+
+    MultiThreadBenchmark.atomicBuffer               16  avgt   10  23.708 ± 1.464   s/op
+    MultiThreadBenchmark.atomicPool                 16  avgt   10   6.289 ± 0.509   s/op
+    MultiThreadBenchmark.greedyRingBufferRouter     16  avgt   10   6.521 ± 1.072   s/op
+    MultiThreadBenchmark.linkedTransferQueue        16  avgt   10  39.674 ± 0.811   s/op
+    MultiThreadBenchmark.mpmcArrayQueue             16  avgt   10  19.320 ± 0.630   s/op
+    MultiThreadBenchmark.mpmcAtomicArrayQueue       16  avgt   10  18.628 ± 1.564   s/op
+    MultiThreadBenchmark.ringBufferRouter           16  avgt   10  11.329 ± 3.150   s/op
+
+    MultiThreadBenchmark.atomicBuffer                8  avgt   10  25.316 ± 0.743   s/op
+    MultiThreadBenchmark.atomicPool                  8  avgt   10   5.471 ± 1.038   s/op
+    MultiThreadBenchmark.greedyRingBufferRouter      8  avgt   10  11.544 ± 0.386   s/op
+    MultiThreadBenchmark.linkedTransferQueue         8  avgt   10  42.163 ± 0.824   s/op
+    MultiThreadBenchmark.mpmcArrayQueue              8  avgt   10  18.395 ± 0.924   s/op
+    MultiThreadBenchmark.mpmcAtomicArrayQueue        8  avgt   10  18.388 ± 0.914   s/op
+    MultiThreadBenchmark.ringBufferRouter            8  avgt   10   9.906 ± 1.014   s/op
+
+    ------------------------------------------------------------------------------------
+*/
