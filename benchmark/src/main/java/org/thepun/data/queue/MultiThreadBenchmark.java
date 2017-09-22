@@ -1,5 +1,6 @@
 package org.thepun.data.queue;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
 import org.jctools.queues.MpmcArrayQueue;
@@ -116,7 +117,7 @@ public class MultiThreadBenchmark {
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
     }
 
-    /*@Benchmark
+    @Benchmark
     public long arraydBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 
@@ -131,41 +132,7 @@ public class MultiThreadBenchmark {
         }
 
         return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }*/
-
-    /*@Benchmark
-    public long linkedBlockingQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new LinkedBlockingQueue<>());
-
-        QueueHead<Long>[] queueHeads = new QueueHead[halfCpu];
-        for (int i = 0; i < halfCpu; i++) {
-            queueHeads[i] = queue;
-        }
-
-        QueueTail<Long>[] queueTails = new QueueTail[halfCpu];
-        for (int i = 0; i < halfCpu; i++) {
-            queueTails[i] = queue;
-        }
-
-        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }*/
-
-    /*@Benchmark
-    public long concurrentLinkedQueue() throws InterruptedException {
-        QueueAdapter<Long> queue = new QueueAdapter<>(new ConcurrentLinkedQueue<>());
-
-        QueueHead<Long>[] queueHeads = new QueueHead[halfCpu];
-        for (int i = 0; i < halfCpu; i++) {
-            queueHeads[i] = queue;
-        }
-
-        QueueTail<Long>[] queueTails = new QueueTail[halfCpu];
-        for (int i = 0; i < halfCpu; i++) {
-            queueTails[i] = queue;
-        }
-
-        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }*/
+    }
 
     @Benchmark
     public long linkedTransferQueue() throws InterruptedException {
@@ -234,28 +201,43 @@ public class MultiThreadBenchmark {
 
 
 /*
-    ------------------------------------------------------------------------------------
+    --------------------------------------------------------
 
     AMD Ryzen 7 1700
     8 cores (16 threads)
+                            (cpu)  Mode  Cnt   Score   Error
 
-    Benchmark                                    (cpu)  Mode  Cnt   Score   Error  Units
+    atomicBuffer               16  avgt   10  23.708 ± 1.464
+    atomicPool                 16  avgt   10   6.289 ± 0.509
+    greedyRingBufferRouter     16  avgt   10   6.521 ± 1.072
+    linkedTransferQueue        16  avgt   10  39.674 ± 0.811
+    mpmcArrayQueue             16  avgt   10  19.320 ± 0.630
+    mpmcAtomicArrayQueue       16  avgt   10  18.628 ± 1.564
+    ringBufferRouter           16  avgt   10  11.329 ± 3.150
 
-    MultiThreadBenchmark.atomicBuffer               16  avgt   10  23.708 ± 1.464   s/op
-    MultiThreadBenchmark.atomicPool                 16  avgt   10   6.289 ± 0.509   s/op
-    MultiThreadBenchmark.greedyRingBufferRouter     16  avgt   10   6.521 ± 1.072   s/op
-    MultiThreadBenchmark.linkedTransferQueue        16  avgt   10  39.674 ± 0.811   s/op
-    MultiThreadBenchmark.mpmcArrayQueue             16  avgt   10  19.320 ± 0.630   s/op
-    MultiThreadBenchmark.mpmcAtomicArrayQueue       16  avgt   10  18.628 ± 1.564   s/op
-    MultiThreadBenchmark.ringBufferRouter           16  avgt   10  11.329 ± 3.150   s/op
+    atomicBuffer                8  avgt   10  25.316 ± 0.743
+    atomicPool                  8  avgt   10   5.471 ± 1.038
+    greedyRingBufferRouter      8  avgt   10  11.544 ± 0.386
+    linkedTransferQueue         8  avgt   10  42.163 ± 0.824
+    mpmcArrayQueue              8  avgt   10  18.395 ± 0.924
+    mpmcAtomicArrayQueue        8  avgt   10  18.388 ± 0.914
+    ringBufferRouter            8  avgt   10   9.906 ± 1.014
 
-    MultiThreadBenchmark.atomicBuffer                8  avgt   10  25.316 ± 0.743   s/op
-    MultiThreadBenchmark.atomicPool                  8  avgt   10   5.471 ± 1.038   s/op
-    MultiThreadBenchmark.greedyRingBufferRouter      8  avgt   10  11.544 ± 0.386   s/op
-    MultiThreadBenchmark.linkedTransferQueue         8  avgt   10  42.163 ± 0.824   s/op
-    MultiThreadBenchmark.mpmcArrayQueue              8  avgt   10  18.395 ± 0.924   s/op
-    MultiThreadBenchmark.mpmcAtomicArrayQueue        8  avgt   10  18.388 ± 0.914   s/op
-    MultiThreadBenchmark.ringBufferRouter            8  avgt   10   9.906 ± 1.014   s/op
+    atomicBuffer                4  avgt   10  22.671 ± 1.030
+    atomicPool                  4  avgt   10   5.470 ± 0.676
+    greedyRingBufferRouter      4  avgt   10  22.397 ± 0.265
+    linkedTransferQueue         4  avgt   10  41.132 ± 2.921
+    mpmcArrayQueue              4  avgt   10  19.394 ± 3.793
+    mpmcAtomicArrayQueue        4  avgt   10  17.013 ± 1.880
+    ringBufferRouter            4  avgt   10  21.277 ± 0.391
 
-    ------------------------------------------------------------------------------------
+    atomicBuffer                2  avgt   10  14.806 ± 2.365
+    atomicPool                  2  avgt   10   3.539 ± 0.423
+    greedyRingBufferRouter      2  avgt   10  17.833 ± 6.230
+    linkedTransferQueue         2  avgt   10  16.049 ± 1.429
+    mpmcArrayQueue              2  avgt   10  13.883 ± 2.061
+    mpmcAtomicArrayQueue        2  avgt   10  18.377 ± 3.988
+    ringBufferRouter            2  avgt   10  24.669 ± 6.833
+
+    --------------------------------------------------------
 */
