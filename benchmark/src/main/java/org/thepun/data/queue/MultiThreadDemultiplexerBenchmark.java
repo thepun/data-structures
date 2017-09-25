@@ -98,6 +98,18 @@ public class MultiThreadDemultiplexerBenchmark {
     }
 
     @Benchmark
+    public long atomicBuffer() throws InterruptedException {
+        AtomicBufferRouter<Long> queue = new AtomicBufferRouter<>(10000);
+
+        QueueHead<Long>[] queueHeads = new QueueHead[3];
+        queueHeads[0] = queue.createConsumer();
+        queueHeads[1] = queue.createConsumer();
+        queueHeads[2] = queue.createConsumer();
+
+        return BenchmarkCases.singleProducerAndMultipleConsumers(queueHeads, queue.createProducer(), values, 100_000_000);
+    }
+
+    @Benchmark
     public long arrayBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 
@@ -191,3 +203,28 @@ public class MultiThreadDemultiplexerBenchmark {
         }
     }*/
 }
+
+
+
+/*
+    ----------------------------------------------------------
+
+    AMD Ryzen 7 1700
+    8 cores (16 threads)
+                             (cpu)  Mode  Cnt   Score    Error
+
+    arrayBlockingQueue           8  avgt   10  71.160 ± 30.654
+    atomicPool                   8  avgt   10   5.714 ±  0.044
+    concurrentLinkedQueue        8  avgt   10  61.006 ± 20.249
+    greedyRingBufferRouter       8  avgt   10  16.158 ± 10.019
+    linkedBlockingQueue          8  avgt   10  23.870 ±  3.940
+    linkedTransferQueue          8  avgt   10  62.746 ±  1.611
+    mpmcArrayQueue               8  avgt   10  20.873 ±  1.203
+    mpmcAtomicArrayQueue         8  avgt   10  20.507 ±  0.920
+    ringBufferDemultiplexer      8  avgt   10   7.111 ±  0.207
+    ringBufferRouter             8  avgt   10  10.994 ±  8.576
+    spmcArrayQueue               8  avgt   10   9.792 ±  0.884
+    stealingLinkedChunk          8  avgt   10   5.151 ±  0.267
+
+    ----------------------------------------------------------
+*/
