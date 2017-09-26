@@ -277,6 +277,20 @@ public class MultiThreadDemultiplexerBenchmark {
 
 Intel(R) Core(TM) i7 CPU         870  @ 2.93GHz
 
+MultiThreadDemultiplexerBenchmark.arrayBlockingQueue           8  avgt   10  58.767 ± 7.801   s/op
+MultiThreadDemultiplexerBenchmark.atomicBuffer                 8  avgt   10   6.757 ± 0.136   s/op
+MultiThreadDemultiplexerBenchmark.atomicPool                   8  avgt   10   3.554 ± 0.169   s/op
+MultiThreadDemultiplexerBenchmark.concurrentLinkedQueue        8  avgt   10  25.197 ± 0.382   s/op
+MultiThreadDemultiplexerBenchmark.greedyRingBufferRouter       8  avgt   10  16.134 ± 1.159   s/op
+MultiThreadDemultiplexerBenchmark.linkedBlockingQueue          8  avgt   10  19.184 ± 1.193   s/op
+MultiThreadDemultiplexerBenchmark.linkedTransferQueue          8  avgt   10  28.728 ± 1.559   s/op
+MultiThreadDemultiplexerBenchmark.mpmcArrayQueue               8  avgt   10  10.452 ± 0.358   s/op
+MultiThreadDemultiplexerBenchmark.mpmcAtomicArrayQueue         8  avgt   10  10.331 ± 0.393   s/op
+MultiThreadDemultiplexerBenchmark.ringBufferDemultiplexer      8  avgt   10   3.487 ± 0.088   s/op
+MultiThreadDemultiplexerBenchmark.ringBufferRouter             8  avgt   10  14.040 ± 1.753   s/op
+MultiThreadDemultiplexerBenchmark.spmcArrayQueue               8  avgt   10   3.630 ± 0.070   s/op
+MultiThreadDemultiplexerBenchmark.stealingLinkedChunk          8  avgt   10   2.874 ± 0.469   s/op
+
 
 
  */
