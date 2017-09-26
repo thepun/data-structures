@@ -244,27 +244,38 @@ public class MultiThreadBenchmark {
 
 
 /*
+    --------------------------------------------------------
 
- Intel(R) Core(TM) i7 CPU         870  @ 2.93GHz
+    Intel(R) Core(TM) i7 870
+    4 cores (8 threads)
+                             (cpu) Mode  Cnt   Score   Error
 
-Benchmark                                    (cpu)  Mode  Cnt   Score   Error  Units
+    arraydBlockingQueue         8  avgt   10  14.790 ± 2.051
+    atomicBuffer                8  avgt   10   7.795 ± 0.760
+    atomicPool                  8  avgt   10   3.107 ± 0.337
+    greedyRingBufferRouter      8  avgt   10   6.673 ± 1.132
+    linkedTransferQueue         8  avgt   10  16.057 ± 7.634
+    mpmcArrayQueue              8  avgt   10  10.467 ± 1.505
+    mpmcAtomicArrayQueue        8  avgt   10  11.389 ± 1.081
+    ringBufferRouter            8  avgt   10   7.674 ± 1.387
 
-MultiThreadBenchmark.arraydBlockingQueue         8  avgt   10  14.790 ± 2.051   s/op
-MultiThreadBenchmark.atomicBuffer                8  avgt   10   7.795 ± 0.760   s/op
-MultiThreadBenchmark.atomicPool                  8  avgt   10   3.107 ± 0.337   s/op
-MultiThreadBenchmark.greedyRingBufferRouter      8  avgt   10   6.673 ± 1.132   s/op
-MultiThreadBenchmark.linkedTransferQueue         8  avgt   10  16.057 ± 7.634   s/op
-MultiThreadBenchmark.mpmcArrayQueue              8  avgt   10  10.467 ± 1.505   s/op
-MultiThreadBenchmark.mpmcAtomicArrayQueue        8  avgt   10  11.389 ± 1.081   s/op
-MultiThreadBenchmark.ringBufferRouter            8  avgt   10   7.674 ± 1.387   s/op
+    arraydBlockingQueue         4  avgt   10  12.820 ± 2.836
+    atomicBuffer                4  avgt   10   8.401 ± 0.765
+    atomicPool                  4  avgt   10   3.508 ± 0.511
+    greedyRingBufferRouter      4  avgt   10   4.596 ± 1.971
+    linkedTransferQueue         4  avgt   10  17.026 ± 1.458
+    mpmcArrayQueue              4  avgt   10   8.062 ± 0.889
+    mpmcAtomicArrayQueue        4  avgt   10   7.932 ± 1.134
+    ringBufferRouter            4  avgt   10   7.564 ± 0.453
 
-MultiThreadBenchmark.arraydBlockingQueue         4  avgt   10  12.820 ± 2.836   s/op
-MultiThreadBenchmark.atomicBuffer                4  avgt   10   8.401 ± 0.765   s/op
-MultiThreadBenchmark.atomicPool                  4  avgt   10   3.508 ± 0.511   s/op
-MultiThreadBenchmark.greedyRingBufferRouter      4  avgt   10   4.596 ± 1.971   s/op
-MultiThreadBenchmark.linkedTransferQueue         4  avgt   10  17.026 ± 1.458   s/op
-MultiThreadBenchmark.mpmcArrayQueue              4  avgt   10   8.062 ± 0.889   s/op
-MultiThreadBenchmark.mpmcAtomicArrayQueue        4  avgt   10   7.932 ± 1.134   s/op
-MultiThreadBenchmark.ringBufferRouter            4  avgt   10   7.564 ± 0.453   s/op
+    arraydBlockingQueue         2  avgt   10  25.552 ± 1.703
+    atomicBuffer                2  avgt   10   3.537 ± 2.214
+    atomicPool                  2  avgt   10   2.271 ± 0.043
+    greedyRingBufferRouter      2  avgt   10   7.926 ± 2.973
+    linkedTransferQueue         2  avgt   10  13.053 ± 7.174
+    mpmcArrayQueue              2  avgt   10   7.103 ± 2.914
+    mpmcAtomicArrayQueue        2  avgt   10   7.436 ± 1.232
+    ringBufferRouter            2  avgt   10   4.529 ± 3.053
 
+    --------------------------------------------------------
  */

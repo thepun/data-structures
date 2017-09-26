@@ -255,6 +255,20 @@ public class MultiThreadDemultiplexerBenchmark {
     spmcArrayQueue               4  avgt   10  12.756 ±  0.759
     stealingLinkedChunk          4  avgt   10   5.418 ±  0.352
 
+    arrayBlockingQueue           2  avgt   10  38.693 ±  7.474
+    atomicBuffer                 2  avgt   10  17.778 ±  0.423
+    atomicPool                   2  avgt   10   5.706 ±  0.060
+    concurrentLinkedQueue        2  avgt   10  23.028 ±  3.616
+    greedyRingBufferRouter       2  avgt   10  17.491 ±  1.084
+    linkedBlockingQueue          2  avgt   10  54.103 ± 14.311
+    linkedTransferQueue          2  avgt   10  15.012 ±  2.197
+    mpmcArrayQueue               2  avgt   10  12.828 ±  2.143
+    mpmcAtomicArrayQueue         2  avgt   10  15.475 ±  4.827
+    ringBufferDemultiplexer      2  avgt   10   2.122 ±  0.029
+    ringBufferRouter             2  avgt   10  25.307 ±  6.096
+    spmcArrayQueue               2  avgt   10  12.803 ±  6.913
+    stealingLinkedChunk          2  avgt   10   4.631 ±  5.932
+
     ----------------------------------------------------------
 */
 
