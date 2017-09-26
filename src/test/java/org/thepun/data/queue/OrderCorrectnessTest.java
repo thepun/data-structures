@@ -73,7 +73,8 @@ public class OrderCorrectnessTest {
     @Test
     public void addManyAndGetMany() {
         for (long i = 0; i < 10000000; i++) {
-            tail.addToTail(i);
+            boolean b = tail.addToTail(i);
+            assertTrue(b);
         }
 
         for (long i = 0; i < 10000000; i++) {
@@ -104,6 +105,26 @@ public class OrderCorrectnessTest {
             }
         }
     }
+
+   /* @Test
+    public void test1() {
+        AtomicBufferRouter<Long> arrayQueue = new AtomicBufferRouter<>(4);
+        QueueHead<Long> consumer = arrayQueue.createConsumer();
+        QueueTail<Long> producer = arrayQueue.createProducer();
+
+        producer.addToTail(1L);
+        producer.addToTail(2L);
+        producer.addToTail(3L);
+        producer.addToTail(4L);
+
+        consumer.removeFromHead();
+        consumer.removeFromHead();
+        consumer.removeFromHead();
+        consumer.removeFromHead();
+
+        producer.addToTail(5L);
+
+    }*/
 
     @Parameters
     public static Collection<Object[]> data() {
