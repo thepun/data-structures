@@ -213,7 +213,22 @@ public class MultiThreadDemultiplexerBenchmark {
     8 cores (16 threads)
                              (cpu)  Mode  Cnt   Score    Error
 
+    arrayBlockingQueue          16  avgt   10 123.283 ± 68.813
+    atomicBuffer                16  avgt   10  17.765 ±  0.435
+    atomicPool                  16  avgt   10   5.720 ±  0.052
+    concurrentLinkedQueue       16  avgt   10  78.068 ± 18.459
+    greedyRingBufferRouter      16  avgt   10  35.656 ±  3.018
+    linkedBlockingQueue         16  avgt   10  20.767 ±  4.203
+    linkedTransferQueue         16  avgt   10  77.447 ±  4.941
+    mpmcArrayQueue              16  avgt   10  26.809 ±  5.234
+    mpmcAtomicArrayQueue        16  avgt   10  32.284 ±  6.042
+    ringBufferDemultiplexer     16  avgt   10  10.028 ±  0.332
+    ringBufferRouter            16  avgt   10  31.586 ±  1.455
+    spmcArrayQueue              16  avgt   10   9.600 ±  0.307
+    stealingLinkedChunk         16  avgt   10   4.482 ±  1.591
+
     arrayBlockingQueue           8  avgt   10  71.160 ± 30.654
+    atomicBuffer                 8  avgt   10  17.811 ±  0.437
     atomicPool                   8  avgt   10   5.714 ±  0.044
     concurrentLinkedQueue        8  avgt   10  61.006 ± 20.249
     greedyRingBufferRouter       8  avgt   10  16.158 ± 10.019
@@ -226,5 +241,28 @@ public class MultiThreadDemultiplexerBenchmark {
     spmcArrayQueue               8  avgt   10   9.792 ±  0.884
     stealingLinkedChunk          8  avgt   10   5.151 ±  0.267
 
+    arrayBlockingQueue           4  avgt   10  25.889 ±  1.852
+    atomicBuffer                 4  avgt   10  17.716 ±  0.408
+    atomicPool                   4  avgt   10   5.703 ±  0.091
+    concurrentLinkedQueue        4  avgt   10  43.138 ±  1.988
+    greedyRingBufferRouter       4  avgt   10   8.249 ±  1.485
+    linkedBlockingQueue          4  avgt   10  16.873 ±  1.317
+    linkedTransferQueue          4  avgt   10  47.442 ±  1.112
+    mpmcArrayQueue               4  avgt   10  22.070 ±  0.669
+    mpmcAtomicArrayQueue         4  avgt   10  22.311 ±  0.346
+    ringBufferDemultiplexer      4  avgt   10   4.794 ±  0.300
+    ringBufferRouter             4  avgt   10  11.853 ±  0.482
+    spmcArrayQueue               4  avgt   10  12.756 ±  0.759
+    stealingLinkedChunk          4  avgt   10   5.418 ±  0.352
+
     ----------------------------------------------------------
 */
+
+
+/*
+
+Intel(R) Core(TM) i7 CPU         870  @ 2.93GHz
+
+
+
+ */
