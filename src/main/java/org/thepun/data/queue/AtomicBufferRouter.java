@@ -28,7 +28,7 @@ public final class AtomicBufferRouter<T> implements Router<T> {
 
         size = (int) Math.pow(2, pow);
         mask = size - 1;
-        data = new Object[size];
+        data = new Object[size * 16];
         consumers = new AtomicBufferConsumer[0];
         producers = new AtomicBufferProducer[0];
 
@@ -37,8 +37,8 @@ public final class AtomicBufferRouter<T> implements Router<T> {
             generations[i] = new Generation(i);
         }
 
-        for (int i = 0; i < data.length; i++) {
-            data[i] = generations[1];
+        for (int i = 0; i < size; i++) {
+            data[i * 16] = generations[0];
         }
     }
 
@@ -208,27 +208,35 @@ public final class AtomicBufferRouter<T> implements Router<T> {
             int index;
             Object currentElement;
             while (localWriteCounter < localReadCounter + size) {
-                if (localWriteCounter % size == 0) {
-                    previousGeneration = currentGeneration;
-                    currentGeneration = generations[++generationIndex % 10];
-                }
+
 
                 index = (int) (localWriteCounter & mask);
 
-                currentElement = data[index];
+                currentElement = data[index * 16];
                 if (currentElement == previousGeneration) {
-                    if (ArrayMemory.compareAndSwapObject(data, index, previousGeneration, element)) {
+                    if (ArrayMemory.compareAndSwapObject(data, index * 16, previousGeneration, element)) {
+                        if ((localWriteCounter + 1) % size == 0) {
+                            previousGeneration = currentGeneration;
+                            currentGeneration = generations[++generationIndex % 10];
+                        }
                         producerWriteCounter.set(localWriteCounter + 1);
                         return true;
                     }
                     localWriteCounter++;
-                } else if (currentElement == currentGeneration) {
-                    localWriteCounter++;
+                    if (localWriteCounter % size == 0) {
+                        previousGeneration = currentGeneration;
+                        currentGeneration = generations[++generationIndex % 10];
+                    }
                 } else {
-                    return false;
+                    localWriteCounter++;
+                    if (localWriteCounter % size == 0) {
+                        previousGeneration = currentGeneration;
+                        currentGeneration = generations[++generationIndex % 10];
+                    }
                 }
             }
 
+            producerWriteCounter.set(localWriteCounter);
             return false;
         }
     }
@@ -271,24 +279,33 @@ public final class AtomicBufferRouter<T> implements Router<T> {
             int index;
             Object element;
             for (;;) {
-                if (localReadCounter % size == 0) {
-                    previousGeneration = currentGeneration;
-                    currentGeneration = generations[++generationIndex % 10];
-                }
+
 
                 index = (int) (localReadCounter & mask);
 
-                element = data[index];
+                element = data[index * 16];
                 if (element == previousGeneration) {
                     return null;
                 } else if (element == currentGeneration) {
                     localReadCounter++;
+                    if (localReadCounter % size == 0) {
+                        previousGeneration = currentGeneration;
+                        currentGeneration = generations[++generationIndex % 10];
+                    }
                     consumerReadCounter.set(localReadCounter);
-                } else if (ArrayMemory.compareAndSwapObject(data, index, element, currentGeneration)) {
+                } else if (ArrayMemory.compareAndSwapObject(data, index * 16, element, currentGeneration)) {
+                    if ((localReadCounter + 1) % size == 0) {
+                        previousGeneration = currentGeneration;
+                        currentGeneration = generations[++generationIndex % 10];
+                    }
                     consumerReadCounter.set(localReadCounter + 1);
                     return (T) element;
                 } else {
                     localReadCounter++;
+                    if (localReadCounter % size == 0) {
+                        previousGeneration = currentGeneration;
+                        currentGeneration = generations[++generationIndex % 10];
+                    }
                     consumerReadCounter.set(localReadCounter);
                 }
             }
