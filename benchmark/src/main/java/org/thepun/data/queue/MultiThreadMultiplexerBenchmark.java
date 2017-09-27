@@ -211,4 +211,19 @@ MultiThreadMultiplexerBenchmark.mpscArrayQueue                  16  avgt   10  1
 MultiThreadMultiplexerBenchmark.ringBufferRouter                16  avgt   10  26.642 ±  7.979   s/op
 MultiThreadMultiplexerBenchmark.unfairLinkedChunk               16  avgt   10   0.851 ±  0.085   s/op
 
+MultiThreadMultiplexerBenchmark.arrayBlockingQueue               8  avgt   10  60.379 ± 10.310   s/op
+MultiThreadMultiplexerBenchmark.atomicBuffer                     8  avgt   10  19.419 ±  0.739   s/op
+MultiThreadMultiplexerBenchmark.atomicPool                       8  avgt   10   5.260 ±  0.419   s/op
+MultiThreadMultiplexerBenchmark.concurrentLinkedQueue            8  avgt   10  35.074 ±  1.001   s/op
+MultiThreadMultiplexerBenchmark.greedyRingBufferMultiplexer      8  avgt   10   7.396 ±  0.374   s/op
+MultiThreadMultiplexerBenchmark.greedyRingBufferRouter           8  avgt   10   7.345 ±  0.185   s/op
+MultiThreadMultiplexerBenchmark.linkedBlockingQueue              8  avgt   10  57.676 ± 16.006   s/op
+MultiThreadMultiplexerBenchmark.linkedTransferQueue              8  avgt   10  30.613 ±  0.446   s/op
+MultiThreadMultiplexerBenchmark.mpmcArrayQueue                   8  avgt   10  22.608 ±  0.747   s/op
+MultiThreadMultiplexerBenchmark.mpmcAtomicArrayQueue             8  avgt   10  23.835 ±  0.613   s/op
+MultiThreadMultiplexerBenchmark.mpscArrayQueue                   8  avgt   10   9.969 ±  0.398   s/op
+MultiThreadMultiplexerBenchmark.ringBufferRouter                 8  avgt   10   8.081 ±  0.751   s/op
+MultiThreadMultiplexerBenchmark.unfairLinkedChunk                8  avgt   10   1.188 ±  0.211   s/op
+
+
  */
