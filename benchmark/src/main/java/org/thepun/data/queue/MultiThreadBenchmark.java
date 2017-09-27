@@ -101,23 +101,6 @@ public class MultiThreadBenchmark {
     }
 
     @Benchmark
-    public long atomicBuffer() throws InterruptedException {
-        AtomicBufferRouter<Long> queue = new AtomicBufferRouter<>(10000);
-
-        QueueHead<Long>[] queueHeads = new QueueHead[halfCpu];
-        for (int i = 0; i < halfCpu; i++) {
-            queueHeads[i] = queue.createConsumer();
-        }
-
-        QueueTail<Long>[] queueTails = new QueueTail[halfCpu];
-        for (int i = 0; i < halfCpu; i++) {
-            queueTails[i] = queue.createProducer();
-        }
-
-        return BenchmarkCases.multipleProducersAndMultipleConsumer(queueHeads, queueTails, values, 100_000_000);
-    }
-
-    @Benchmark
     public long arraydBlockingQueue() throws InterruptedException {
         QueueAdapter<Long> queue = new QueueAdapter<>(new ArrayBlockingQueue<Long>(10000));
 

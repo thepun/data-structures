@@ -154,9 +154,6 @@ public class OrderCorrectnessTest {
         /*AtomicPoolRouter<Long> arrayPool = new AtomicPoolRouter<>(10000000);
         list.add(new Object[] {arrayPool.createProducer(), arrayPool.createConsumer()});*/
 
-        AtomicBufferRouter<Long> arrayQueue = new AtomicBufferRouter<>(10000000);
-        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
-
         return list;
     }
 }
