@@ -295,4 +295,18 @@ MultiThreadDemultiplexerBenchmark.ringBufferRouter             4  avgt   10   4.
 MultiThreadDemultiplexerBenchmark.spmcArrayQueue               4  avgt   10   5.291 ± 0.288   s/op
 MultiThreadDemultiplexerBenchmark.stealingLinkedChunk          4  avgt   10   2.933 ± 0.110   s/op
 
+MultiThreadDemultiplexerBenchmark.arrayBlockingQueue           2  avgt   10  25.759 ±  1.307   s/op
+MultiThreadDemultiplexerBenchmark.atomicBuffer                 2  avgt   10   6.741 ±  0.118   s/op
+MultiThreadDemultiplexerBenchmark.atomicPool                   2  avgt   10   3.586 ±  0.129   s/op
+MultiThreadDemultiplexerBenchmark.concurrentLinkedQueue        2  avgt   10  10.427 ±  4.389   s/op
+MultiThreadDemultiplexerBenchmark.greedyRingBufferRouter       2  avgt   10   6.780 ±  1.228   s/op
+MultiThreadDemultiplexerBenchmark.linkedBlockingQueue          2  avgt   10  33.158 ± 13.756   s/op
+MultiThreadDemultiplexerBenchmark.linkedTransferQueue          2  avgt   10  12.475 ±  0.621   s/op
+MultiThreadDemultiplexerBenchmark.mpmcArrayQueue               2  avgt   10   8.192 ±  1.606   s/op
+MultiThreadDemultiplexerBenchmark.mpmcAtomicArrayQueue         2  avgt   10   7.443 ±  0.892   s/op
+MultiThreadDemultiplexerBenchmark.ringBufferDemultiplexer      2  avgt   10   2.068 ±  0.071   s/op
+MultiThreadDemultiplexerBenchmark.ringBufferRouter             2  avgt   10   5.475 ±  2.927   s/op
+MultiThreadDemultiplexerBenchmark.spmcArrayQueue               2  avgt   10   5.786 ±  2.117   s/op
+MultiThreadDemultiplexerBenchmark.stealingLinkedChunk          2  avgt   10   2.287 ±  0.177   s/op
+
  */
