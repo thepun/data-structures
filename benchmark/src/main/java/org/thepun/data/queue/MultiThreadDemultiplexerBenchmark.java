@@ -277,6 +277,8 @@ public class MultiThreadDemultiplexerBenchmark {
 
 Intel(R) Core(TM) i7 CPU         870  @ 2.93GHz
 
+Benchmark                                                  (cpu)  Mode  Cnt   Score   Error  Units
+
 MultiThreadDemultiplexerBenchmark.arrayBlockingQueue           8  avgt   10  58.767 ± 7.801   s/op
 MultiThreadDemultiplexerBenchmark.atomicBuffer                 8  avgt   10   6.757 ± 0.136   s/op
 MultiThreadDemultiplexerBenchmark.atomicPool                   8  avgt   10   3.554 ± 0.169   s/op
@@ -291,6 +293,18 @@ MultiThreadDemultiplexerBenchmark.ringBufferRouter             8  avgt   10  14.
 MultiThreadDemultiplexerBenchmark.spmcArrayQueue               8  avgt   10   3.630 ± 0.070   s/op
 MultiThreadDemultiplexerBenchmark.stealingLinkedChunk          8  avgt   10   2.874 ± 0.469   s/op
 
-
+MultiThreadDemultiplexerBenchmark.arrayBlockingQueue           4  avgt   10  28.156 ± 4.187   s/op
+MultiThreadDemultiplexerBenchmark.atomicBuffer                 4  avgt   10   6.640 ± 0.802   s/op
+MultiThreadDemultiplexerBenchmark.atomicPool                   4  avgt   10   3.558 ± 0.220   s/op
+MultiThreadDemultiplexerBenchmark.concurrentLinkedQueue        4  avgt   10  19.823 ± 3.880   s/op
+MultiThreadDemultiplexerBenchmark.greedyRingBufferRouter       4  avgt   10   4.625 ± 1.897   s/op
+MultiThreadDemultiplexerBenchmark.linkedBlockingQueue          4  avgt   10  15.311 ± 1.357   s/op
+MultiThreadDemultiplexerBenchmark.linkedTransferQueue          4  avgt   10  26.655 ± 2.535   s/op
+MultiThreadDemultiplexerBenchmark.mpmcArrayQueue               4  avgt   10  11.332 ± 0.603   s/op
+MultiThreadDemultiplexerBenchmark.mpmcAtomicArrayQueue         4  avgt   10  10.568 ± 0.943   s/op
+MultiThreadDemultiplexerBenchmark.ringBufferDemultiplexer      4  avgt   10   3.523 ± 0.082   s/op
+MultiThreadDemultiplexerBenchmark.ringBufferRouter             4  avgt   10   4.930 ± 1.358   s/op
+MultiThreadDemultiplexerBenchmark.spmcArrayQueue               4  avgt   10   5.291 ± 0.288   s/op
+MultiThreadDemultiplexerBenchmark.stealingLinkedChunk          4  avgt   10   2.933 ± 0.110   s/op
 
  */
