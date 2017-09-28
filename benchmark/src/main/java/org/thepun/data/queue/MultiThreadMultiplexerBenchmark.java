@@ -240,3 +240,26 @@ MultiThreadMultiplexerBenchmark.ringBufferRouter                 4  avgt   10  1
 MultiThreadMultiplexerBenchmark.unfairLinkedChunk                4  avgt   10   1.405 ±  0.297   s/op
 
  */
+
+
+/*
+
+Intel(R) Core(TM) i7 CPU         870  @ 2.93GHz
+
+Benchmark                                                    (cpu)  Mode  Cnt   Score    Error  Units
+
+MultiThreadMultiplexerBenchmark.arrayBlockingQueue               8  avgt   10  46.913 ?  9.272   s/op
+MultiThreadMultiplexerBenchmark.atomicBuffer                     8  avgt   10   8.077 ?  0.345   s/op
+MultiThreadMultiplexerBenchmark.atomicPool                       8  avgt   10   3.271 ?  0.389   s/op
+MultiThreadMultiplexerBenchmark.concurrentLinkedQueue            8  avgt   10  13.040 ? 10.744   s/op
+MultiThreadMultiplexerBenchmark.greedyRingBufferMultiplexer      8  avgt   10   4.729 ?  9.493   s/op
+MultiThreadMultiplexerBenchmark.greedyRingBufferRouter           8  avgt   10  11.628 ?  2.852   s/op
+MultiThreadMultiplexerBenchmark.linkedBlockingQueue              8  avgt   10  31.897 ?  4.061   s/op
+MultiThreadMultiplexerBenchmark.linkedTransferQueue              8  avgt   10  13.538 ?  4.820   s/op
+MultiThreadMultiplexerBenchmark.mpmcArrayQueue                   8  avgt   10  11.582 ?  0.512   s/op
+MultiThreadMultiplexerBenchmark.mpmcAtomicArrayQueue             8  avgt   10  11.417 ?  0.549   s/op
+MultiThreadMultiplexerBenchmark.mpscArrayQueue                   8  avgt   10   3.981 ?  0.154   s/op
+MultiThreadMultiplexerBenchmark.ringBufferRouter                 8  avgt   10  14.596 ?  2.011   s/op
+MultiThreadMultiplexerBenchmark.unfairLinkedChunk                8  avgt   10   1.894 ?  0.047   s/op
+
+ */
