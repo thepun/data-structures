@@ -26,8 +26,10 @@ public class OrderCorrectnessTest {
 
     @Test
     public void emptyQueue() {
-        Long element = head.removeFromHead();
-        assertNull(element);
+        for (int i = 0; i < 100; i++) {
+            Long element = head.removeFromHead();
+            assertNull(element);
+        }
     }
 
     @Test
