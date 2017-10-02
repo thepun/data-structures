@@ -26,7 +26,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @Fork(jvmArgs = {/*"-verbose:gc",*/ "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class MultiThreadBenchmark {
 
-    @Param({"16", "8", "4", "2"})
+    @Param({"64", "32", "16", "8", "4", "2"})
     //@Param({"4"})
     private int cpu;
 

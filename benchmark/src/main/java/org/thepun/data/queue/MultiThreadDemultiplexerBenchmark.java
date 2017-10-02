@@ -19,7 +19,7 @@ import org.openjdk.jmh.annotations.*;
 @Fork(jvmArgs = {"-verbose:gc", "-XX:+PrintGCDetails", "-server", "-XX:+UseSerialGC", "-Xmn8000M", "-Xms10000M", "-Xmx10000M"})
 public class MultiThreadDemultiplexerBenchmark {
 
-    @Param({"16", "8", "4", "2"})
+    @Param({"64", "32", "16", "8", "4", "2"})
     private int cpu;
 
     private Long[] values;
