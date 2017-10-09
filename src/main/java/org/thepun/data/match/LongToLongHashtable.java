@@ -10,6 +10,8 @@ public class LongToLongHashtable {
     public static final long ELEMENT_NOT_FOUND = Long.MAX_VALUE;
 
     private static final int DEFAULT_CAPACITY = 16;
+    private static final int SATURATION_INDEX = 5;
+    private static final int SATURATION_DEGREE = 10;
 
 
     private int fill;
@@ -17,9 +19,22 @@ public class LongToLongHashtable {
     private long[] data;
 
     public LongToLongHashtable() {
+        this(DEFAULT_CAPACITY);
+    }
+
+    public LongToLongHashtable(int initialCapacity) {
+        if (initialCapacity < 1) {
+            throw new IllegalArgumentException("Initial capacity should be greater then zero");
+        }
+
         fill = 0;
-        capacity = DEFAULT_CAPACITY;
-        data = new long[DEFAULT_CAPACITY * 2];
+        capacity = initialCapacity;
+        data = new long[initialCapacity * 2];
+        Arrays.fill(data, ELEMENT_NOT_FOUND);
+    }
+
+    public int length() {
+        return fill;
     }
 
     public long get(long key) {
@@ -27,33 +42,52 @@ public class LongToLongHashtable {
 
         long[] localData = data;
         int localCapacity = capacity;
-        int hash = (int) (key % localCapacity);
 
-
-
-        return 0;
+        return read(localData, localCapacity, key);
     }
 
-    public void set(long key, long value) {
+    public long set(long key, long value) {
         checkForEdge(key);
 
         long[] localData = data;
         int localFill = fill;
         int localCapacity = capacity;
-        int fillIndex = localFill * 10 / localCapacity;
 
-        if (fillIndex >= 5) {
-            enlarge();
-            localCapacity = capacity;
+        long result = write(localData, localCapacity, key, value);
+        if (result == ELEMENT_NOT_FOUND) {
+            localFill++;
+
+            int fillIndex = localFill * SATURATION_DEGREE / localCapacity;
+            if (fillIndex >= SATURATION_INDEX) {
+                enlarge();
+            }
+
+            fill = localFill;
         }
 
-        put(localData, localCapacity, key, value);
+        return result;
     }
 
     public long remove(long key) {
         checkForEdge(key);
 
+        long[] localData = data;
+        int localFill = fill;
+        int localCapacity = capacity;
 
+        long result = readAndClear(localData, localCapacity, key);
+        if (result != ELEMENT_NOT_FOUND) {
+            localFill--;
+
+            int fillIndex = localFill * SATURATION_DEGREE / localCapacity;
+            if (fillIndex < SATURATION_INDEX) {
+                diminish();
+            }
+
+            fill = localFill;
+        }
+
+        return result;
     }
 
     private void enlarge() {
@@ -83,14 +117,51 @@ public class LongToLongHashtable {
             key = oldData[i << 1];
             if (key != ELEMENT_NOT_FOUND) {
                 value = oldData[(i << 1) | 1];
-                put(newData, newCapacity, key, value);
+                write(newData, newCapacity, key, value);
             }
         }
 
         return newData;
     }
 
-    private void put(long[] dataToPut, int dataCapacity, long key, long value) {
+    private long read(long[] localData, int localCapacity, long key) {
+        int hash = (int) (key % localCapacity);
+
+        long anotherKey;
+        int indexKey, indexValue;
+        for (;;) {
+            indexKey = hash << 1;
+            indexValue = (hash << 1) | 1;
+
+            anotherKey = localData[indexKey];
+            if (anotherKey == key) {
+                return localData[indexValue];
+            }
+
+            hash = (hash + 1) % localCapacity;
+        }
+    }
+
+    private long readAndClear(long[] localData, int localCapacity, long key) {
+        int hash = (int) (key % localCapacity);
+
+        long anotherKey;
+        int indexKey, indexValue;
+        for (;;) {
+            indexKey = hash << 1;
+            indexValue = (hash << 1) | 1;
+
+            anotherKey = localData[indexKey];
+            if (anotherKey == key) {
+                localData[indexKey] = ELEMENT_NOT_FOUND;
+                return localData[indexValue];
+            }
+
+            hash = (hash + 1) % localCapacity;
+        }
+    }
+
+    private long write(long[] dataToPut, int dataCapacity, long key, long value) {
         int hash = (int) (key % dataCapacity);
 
         long anotherKey;
@@ -103,7 +174,7 @@ public class LongToLongHashtable {
             if (anotherKey == ELEMENT_NOT_FOUND) {
                 dataToPut[indexKey] = key;
                 dataToPut[indexValue] = value;
-                break;
+                return anotherKey;
             }
 
             hash = (hash + 1) % dataCapacity;
