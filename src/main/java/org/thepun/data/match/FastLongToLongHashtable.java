@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * Created by thepun on 01.10.17.
  */
-public class LongToLongHashtable {
+public class FastLongToLongHashtable {
 
     public static final long ELEMENT_NOT_FOUND = Long.MAX_VALUE;
 
@@ -18,11 +18,11 @@ public class LongToLongHashtable {
     private int capacity;
     private long[] data;
 
-    public LongToLongHashtable() {
+    public FastLongToLongHashtable() {
         this(DEFAULT_CAPACITY);
     }
 
-    public LongToLongHashtable(int initialCapacity) {
+    public FastLongToLongHashtable(int initialCapacity) {
         if (initialCapacity < 1) {
             throw new IllegalArgumentException("Initial capacity should be greater then zero");
         }
@@ -126,58 +126,128 @@ public class LongToLongHashtable {
 
     private long read(long[] localData, int localCapacity, long key) {
         int hash = (int) (key % localCapacity);
+        int indexKey = hash << 1;
+        int firstIndexKey = indexKey;
 
         long anotherKey;
-        int indexKey, indexValue;
+
+        // from initial to right edge
         for (;;) {
-            indexKey = hash << 1;
-            indexValue = (hash << 1) | 1;
+            anotherKey = localData[indexKey];
+            if (anotherKey == key) {
+                return localData[indexKey + 1];
+            }
+
+            indexKey += 2;
+
+            if (indexKey == localCapacity) {
+                break;
+            }
+        }
+
+        // from left edge to initial
+        indexKey = 0;
+        for (;;) {
+            if (indexKey == firstIndexKey) {
+                return ELEMENT_NOT_FOUND;
+            }
 
             anotherKey = localData[indexKey];
             if (anotherKey == key) {
-                return localData[indexValue];
+                return localData[indexKey + 1];
             }
 
-            hash = (hash + 1) % localCapacity;
+            indexKey += 2;
         }
     }
 
-    private long readAndClear(long[] localData, int localCapacity, long key) {
-        int hash = (int) (key % localCapacity);
+    private long readAndClear(long[] dataToUse, int dataCapacity, long key) {
+        int hash = (int) (key % dataCapacity);
+        int indexKey = hash << 1;
+        int firstIndexKey = indexKey;
 
         long anotherKey;
-        int indexKey, indexValue;
-        for (;;) {
-            indexKey = hash << 1;
-            indexValue = (hash << 1) | 1;
 
-            anotherKey = localData[indexKey];
+        // from initial to right edge
+        for (;;) {
+            anotherKey = dataToUse[indexKey];
             if (anotherKey == key) {
-                localData[indexKey] = ELEMENT_NOT_FOUND;
-                return localData[indexValue];
+                dataToUse[indexKey] = ELEMENT_NOT_FOUND;
+                return dataToUse[indexKey + 1];
             }
 
-            hash = (hash + 1) % localCapacity;
+            indexKey += 2;
+
+            if (indexKey == dataCapacity) {
+                break;
+            }
+        }
+
+        // from left edge to initial
+        indexKey = 0;
+        for (;;) {
+            if (indexKey == firstIndexKey) {
+                return ELEMENT_NOT_FOUND;
+            }
+
+            anotherKey = dataToUse[indexKey];
+            if (anotherKey == key) {
+                dataToUse[indexKey] = ELEMENT_NOT_FOUND;
+                return dataToUse[indexKey + 1];
+            }
+
+            indexKey += 2;
         }
     }
 
     private long write(long[] dataToPut, int dataCapacity, long key, long value) {
         int hash = (int) (key % dataCapacity);
+        int indexKey = hash << 1;
+        int firstIndexKey = indexKey;
 
         long anotherKey;
-        int indexKey, indexValue;
+
+        // from initial to right edge
         for (;;) {
-            indexKey = hash << 1;
-            indexValue = (hash << 1) | 1;
+            anotherKey = dataToPut[indexKey];
+            if (anotherKey == ELEMENT_NOT_FOUND) {
+                dataToPut[indexKey] = key;
+                dataToPut[indexKey + 1] = value;
+                return ELEMENT_NOT_FOUND;
+            } else if (anotherKey == key) {
+                int indexValue = indexKey + 1;
+                long anotherValue = dataToPut[indexValue];
+                dataToPut[indexValue] = value;
+                return anotherValue;
+            }
+
+            indexKey += 2;
+
+            if (indexKey == dataCapacity) {
+                break;
+            }
+        }
+
+        // from left edge to initial
+        indexKey = 0;
+        for (;;) {
+            if (indexKey == firstIndexKey) {
+                return ELEMENT_NOT_FOUND;
+            }
 
             anotherKey = dataToPut[indexKey];
             if (anotherKey == ELEMENT_NOT_FOUND) {
                 dataToPut[indexKey] = key;
+                dataToPut[indexKey + 1] = value;
+                return ELEMENT_NOT_FOUND;
+            } else if (anotherKey == key) {
+                int indexValue = indexKey + 1;
+                long anotherValue = dataToPut[indexValue];
                 dataToPut[indexValue] = value;
-                return anotherKey;
+                return anotherValue;
             }
 
-            hash = (hash + 1) % dataCapacity;
+            indexKey += 2;
         }
     }
 

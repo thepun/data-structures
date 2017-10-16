@@ -8,7 +8,7 @@ public class LongToLongHashtableTest {
 
     @Test
     public void addElementAndGet() {
-        LongToLongHashtable hashtable = new LongToLongHashtable();
+        FastLongToLongHashtable hashtable = new FastLongToLongHashtable();
 
         hashtable.set(599, 1234);
 
