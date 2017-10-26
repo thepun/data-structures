@@ -1,11 +1,27 @@
+/**
+ * Copyright (C)2011 - Marat Gariev <thepun599@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.thepun.data.transfer;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import org.thepun.unsafe.ArrayMemory;
-import org.thepun.unsafe.ArrayMemoryLayout;
+import io.github.thepun.unsafe.ArrayMemory;
+import io.github.thepun.unsafe.SystemTypeSizes;
+
 
 public final class StealingLinkedChunkDemultiplexer<T> implements QueueTail<T>, HasConsumers<T> {
 
@@ -15,9 +31,9 @@ public final class StealingLinkedChunkDemultiplexer<T> implements QueueTail<T>, 
     private static final int LINKED_FIRST_OFFSET_INDEX = LINKED_BUNCH_SIZE - 2;
     private static final int LINKED_FIRST_ITEM_INDEX = 0;
     private static final int LINKED_SECOND_ITEM_INDEX = 1;
-    private static final long LINKED_FIRST_ITEM_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, 0);
-    private static final long LINKED_REF_TO_NEXT_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, LINKED_BUNCH_SIZE - 1);
-    private static final long LINKED_REF_TO_NEXT_GC_INDEX_ADDRESS = ArrayMemoryLayout.getElementOffset(Object[].class, LINKED_BUNCH_SIZE - 2);
+    private static final long LINKED_FIRST_ITEM_ADDRESS = ArrayMemory.firstElementOffset();
+    private static final long LINKED_REF_TO_NEXT_ADDRESS = ArrayMemory.firstElementOffset() + SystemTypeSizes.referenceSize() * (LINKED_BUNCH_SIZE - 1);
+    private static final long LINKED_REF_TO_NEXT_GC_ADDRESS = ArrayMemory.firstElementOffset() + SystemTypeSizes.referenceSize() * (LINKED_BUNCH_SIZE - 2);
     private static final Object[] LINKED_NULLS_BUNCH = new Object[LINKED_BUNCH_SIZE];
     private static final Object EMPTY_REF = new Object();
     private static final Object STEAL_REF = new Object();
@@ -116,9 +132,9 @@ public final class StealingLinkedChunkDemultiplexer<T> implements QueueTail<T>, 
                 //localEmptyChain = new Object[LINKED_BUNCH_SIZE];
             }
 
-            writerEmptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, LINKED_REF_TO_NEXT_GC_INDEX_ADDRESS);
-            ArrayMemory.setObject(localEmptyChain, LINKED_FIRST_ITEM_INDEX_ADDRESS, element);
-            ArrayMemory.setObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS, localEmptyChain);
+            writerEmptyChain = (Object[]) ArrayMemory.getObject(localEmptyChain, LINKED_REF_TO_NEXT_GC_ADDRESS);
+            ArrayMemory.setObject(localEmptyChain, LINKED_FIRST_ITEM_ADDRESS, element);
+            ArrayMemory.setObject(currentBunch, LINKED_REF_TO_NEXT_ADDRESS, localEmptyChain);
             currentWriteNode.index = LINKED_SECOND_ITEM_INDEX;
             currentWriteNode.bunch = localEmptyChain;
             nextConsumerIndex = localNextConsumerIndex + 1;
@@ -170,7 +186,7 @@ public final class StealingLinkedChunkDemultiplexer<T> implements QueueTail<T>, 
             for (;;) {
                 if (currentIndex == LINKED_FIRST_OFFSET_INDEX) {
                     Object[] oldHeadBunh = currentBunch;
-                    currentBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
+                    currentBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_ADDRESS);
                     if (currentBunch == null) {
                         currentNode.index = currentIndex;
                         break;
@@ -187,7 +203,7 @@ public final class StealingLinkedChunkDemultiplexer<T> implements QueueTail<T>, 
                     Object[] prevEmptyChainHead;
                     do {
                         prevEmptyChainHead = emptyChain.get();
-                        ArrayMemory.setObject(oldHeadBunh, LINKED_REF_TO_NEXT_GC_INDEX_ADDRESS, prevEmptyChainHead);
+                        ArrayMemory.setObject(oldHeadBunh, LINKED_REF_TO_NEXT_GC_ADDRESS, prevEmptyChainHead);
                     } while (!emptyChain.compareAndSet(prevEmptyChainHead, oldHeadBunh));
                 }
 
@@ -236,7 +252,7 @@ public final class StealingLinkedChunkDemultiplexer<T> implements QueueTail<T>, 
                     }
 
                     if (currentIndex == LINKED_FIRST_ITEM_INDEX) {
-                        Object[] refToNextBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_INDEX_ADDRESS);
+                        Object[] refToNextBunch = (Object[]) ArrayMemory.getObject(currentBunch, LINKED_REF_TO_NEXT_ADDRESS);
                         if (refToNextBunch == null) {
                             break;
                         }
