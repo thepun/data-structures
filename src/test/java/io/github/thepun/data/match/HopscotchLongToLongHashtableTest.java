@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class LongToLongHashtableTest {
+public class HopscotchLongToLongHashtableTest {
 
     @Test
     public void addElementAndGet() {

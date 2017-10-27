@@ -2,7 +2,7 @@ plugins {
     id "com.github.hierynomus.license" version"0.14.0"
 }
 
-apply plugin: 'java-library'
+apply plugin: 'java'
 apply from: 'ide.gradle'
 
 group 'io.github.thepun'

@@ -147,29 +147,29 @@ public class OrderCorrectnessTest {
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
 
-        /*LinkedChunkBridge<Long> longSPSCSplittedLinkedQueue = new LinkedChunkBridge<>();
+        LinkedChunkBridge<Long> longSPSCSplittedLinkedQueue = new LinkedChunkBridge<>();
         list.add(new Object[] {longSPSCSplittedLinkedQueue, longSPSCSplittedLinkedQueue});
 
         RingBufferBridge<Long> arrayBridge = new RingBufferBridge<>(10000000);
-        list.add(new Object[] {arrayBridge, arrayBridge});*/
+        list.add(new Object[] {arrayBridge, arrayBridge});
 
-        /*RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
-        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});*/
+        RingBufferRouter<Long> arrayQueue = new RingBufferRouter<>(10000000);
+        list.add(new Object[] {arrayQueue.createProducer(), arrayQueue.createConsumer()});
 
-        /*RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
+        RingBufferDemultiplexer<Long> arrayDemultiplexer = new RingBufferDemultiplexer<>(10000000);
         list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});
 
-        StealingLinkedChunkDemultiplexer<Long> arrayDemultiplexer = new StealingLinkedChunkDemultiplexer<>();
-        list.add(new Object[] {arrayDemultiplexer, arrayDemultiplexer.createConsumer()});*/
+        StealingLinkedChunkDemultiplexer<Long> stealingDemultiplexer = new StealingLinkedChunkDemultiplexer<>();
+        list.add(new Object[] {stealingDemultiplexer, stealingDemultiplexer.createConsumer()});
 
-        /*GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
-        list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});*/
+        GreedyRingBufferRouter<Long> greedyArrayQueue = new GreedyRingBufferRouter<>(10000000);
+        list.add(new Object[] {greedyArrayQueue.createProducer(), greedyArrayQueue.createConsumer()});
 
-        /*GreedyRingBufferMultiplexer<Long> longLinkedArrayMultiplexer = new GreedyRingBufferMultiplexer<>(10000000);
-        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});*/
+        GreedyRingBufferMultiplexer<Long> longLinkedArrayMultiplexer = new GreedyRingBufferMultiplexer<>(10000000);
+        list.add(new Object[] {longLinkedArrayMultiplexer.createProducer(), longLinkedArrayMultiplexer});
 
-        /*AtomicPoolRouter<Long> arrayPool = new AtomicPoolRouter<>(10000000);
-        list.add(new Object[] {arrayPool.createProducer(), arrayPool.createConsumer()});*/
+        AtomicPoolRouter<Long> arrayPool = new AtomicPoolRouter<>(10000000);
+        list.add(new Object[] {arrayPool.createProducer(), arrayPool.createConsumer()});
 
         return list;
     }
