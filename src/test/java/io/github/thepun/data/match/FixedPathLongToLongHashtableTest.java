@@ -19,11 +19,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class HopscotchLongToLongHashtableTest {
+public class FixedPathLongToLongHashtableTest {
 
     @Test
     public void addElementAndGet() {
-        HopscotchLongToLongHashtable hashtable = new HopscotchLongToLongHashtable();
+        FixedPathLongToLongHashtable hashtable = new FixedPathLongToLongHashtable();
 
         hashtable.set(599, 1234);
 

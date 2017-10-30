@@ -23,7 +23,7 @@ import io.github.thepun.unsafe.ArrayMemory;
 /**
  * Created by thepun on 01.10.17.
  */
-public class HopscotchLongToLongHashtable {
+public class FixedPathLongToLongHashtable implements LongToLongHashtable {
 
     public static final long ELEMENT_NOT_FOUND = Long.MAX_VALUE;
 
@@ -45,11 +45,11 @@ public class HopscotchLongToLongHashtable {
     private int capacity;
     private long[] data;
 
-    public HopscotchLongToLongHashtable() {
+    public FixedPathLongToLongHashtable() {
         this(DEFAULT_CAPACITY);
     }
 
-    public HopscotchLongToLongHashtable(int initialCapacity) {
+    public FixedPathLongToLongHashtable(int initialCapacity) {
         if (initialCapacity < 1) {
             throw new IllegalArgumentException("Initial capacity should be greater then zero");
         }
@@ -62,14 +62,17 @@ public class HopscotchLongToLongHashtable {
         Arrays.fill(data, ELEMENT_NOT_FOUND);
     }
 
+    @Override
     public int capacity() {
         return capacity;
     }
 
+    @Override
     public int length() {
         return fill;
     }
 
+    @Override
     public long get(long key) {
         checkForEdge(key);
 
@@ -143,32 +146,109 @@ public class HopscotchLongToLongHashtable {
         return ELEMENT_NOT_FOUND;
     }
 
+    @Override
     public long set(long key, long value) {
         checkForEdge(key);
 
         long[] localData = data;
         int localFill = fill;
         int localCapacity = capacity;
+        int hash = (int) (key % localCapacity);
+        long indexKey = hash << INDEX_STEP_SHIFT;
+        long result;
 
-        long result = ELEMENT_NOT_FOUND;
+        long anotherKey;
 
+        for (;;) {
+            // try current key
+            anotherKey = ArrayMemory.getLong(localData, indexKey);
+            if (anotherKey == key) {
+                break;
+            }
+
+            // first and second links
+            long link12 = ArrayMemory.getLong(localData, indexKey | LINK_1_2_SUFIX);
+            int link1 = (int) (link12 >> INT_SHIFT);
+            int link2 = (int) link12;
+
+            // check first link
+            if (link1 == 0) {
+                indexKey = link1;
+
+                anotherKey = ArrayMemory.getLong(localData, link1);
+                if (anotherKey == ELEMENT_NOT_FOUND) {
+
+                }
+
+                break;
+            }
+
+            // try first link
+            anotherKey = ArrayMemory.getLong(localData, link1);
+            if (anotherKey == key) {
+                return ArrayMemory.getLong(localData, link1 | DATA_SUFIX);
+            }
+
+            // check second link
+            if (link2 == 0) {
+                return ELEMENT_NOT_FOUND;
+            }
+
+            // try second link
+            anotherKey = ArrayMemory.getLong(localData, link2);
+            if (anotherKey == key) {
+                return ArrayMemory.getLong(localData, link2 | DATA_SUFIX);
+            }
+
+            // third and forth links
+            long link34 = ArrayMemory.getLong(localData, indexKey | LINK_3_4_SUFIX);
+            int link3 = (int) (link34 >> INT_SHIFT);
+            int link4 = (int) link34;
+
+            // check third link
+            if (link3 == 0) {
+                return ELEMENT_NOT_FOUND;
+            }
+
+            // try third link
+            anotherKey = ArrayMemory.getLong(localData, link3);
+            if (anotherKey == key) {
+                return ArrayMemory.getLong(localData, link3 | DATA_SUFIX);
+            }
+
+            // check forth link
+            if (link4 == 0) {
+                return ELEMENT_NOT_FOUND;
+            }
+
+            // try forth link
+            anotherKey = ArrayMemory.getLong(localData, link4);
+            if (anotherKey == key) {
+                return ArrayMemory.getLong(localData, link4 | DATA_SUFIX);
+            }
+        }
+
+        // set element to detected position
+        result = ArrayMemory.getLong(localData, indexKey | DATA_SUFIX);
+        ArrayMemory.setLong(localData, indexKey | DATA_SUFIX, value);
 
 
         // update counters because we added new element
-        if (result == ELEMENT_NOT_FOUND) {
-            localFill++;
 
-            int fillIndex = localFill * SATURATION_DEGREE / localCapacity;
-            if (fillIndex >= SATURATION_HIGH) {
-                enlarge();
-            }
+        /*localFill++;
 
-            fill = localFill;
+        int fillIndex = localFill * SATURATION_DEGREE / localCapacity;
+        if (fillIndex >= SATURATION_HIGH) {
+            enlarge();
         }
+
+        fill = localFill;*/
+
 
         return result;
     }
 
+    @Override
     public long remove(long key) {
         checkForEdge(key);
 
@@ -243,7 +323,12 @@ public class HopscotchLongToLongHashtable {
                 return ELEMENT_NOT_FOUND;
             }
 
-            indexKey = link4;
+            anotherKey = ArrayMemory.getLong(localData, link4);
+            if (anotherKey == key) {
+                result = ArrayMemory.getLong(localData, link4 | DATA_SUFIX);
+                ArrayMemory.setLong(localData, link4 | DATA_SUFIX, ELEMENT_NOT_FOUND);
+                break;
+            }
         }
 
         // if we found something update counters
