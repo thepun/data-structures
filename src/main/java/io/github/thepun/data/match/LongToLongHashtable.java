@@ -2,14 +2,16 @@ package io.github.thepun.data.match;
 
 public interface LongToLongHashtable {
 
-    int capacity();
+    long ELEMENT_NOT_FOUND = Long.MAX_VALUE;
 
-    int length();
+    //int capacity();
+
+    //int length();
 
     long get(long key);
 
-    long set(long key, long value);
+    void set(long key, long value);
 
-    long remove(long key);
+    void remove(long key);
 
 }
