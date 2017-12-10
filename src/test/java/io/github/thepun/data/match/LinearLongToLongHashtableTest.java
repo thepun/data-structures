@@ -15,15 +15,15 @@
  */
 package io.github.thepun.data.match;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 
-public class FixedPathLongToLongHashtableTest {
+import static org.junit.Assert.assertEquals;
+
+public class LinearLongToLongHashtableTest {
 
     @Test
     public void addElementAndGet() {
-        FixedPathLongToLongHashtable hashtable = new FixedPathLongToLongHashtable();
+        LinearLongToLongHashtable hashtable = new LinearLongToLongHashtable();
 
         hashtable.set(599, 1234);
 
