@@ -2,6 +2,7 @@ package io.github.thepun.data.match;
 
 import java.util.Arrays;
 
+// TODO: change array access to unsafe
 public final class LinearLongToLongHashtable implements LongToLongHashtable {
 
     private int size;
@@ -25,6 +26,9 @@ public final class LinearLongToLongHashtable implements LongToLongHashtable {
             if (keyFromData == key) {
                 valueFromData = data[index * 2 + 1];
                 return valueFromData;
+            }
+            if (keyFromData == ELEMENT_NOT_FOUND) {
+                return ELEMENT_NOT_FOUND;
             }
 
             index++;
@@ -81,6 +85,7 @@ public final class LinearLongToLongHashtable implements LongToLongHashtable {
                     for (;;) {
                         anotherKeyFromData = newData[index * 2];
                         if (anotherKeyFromData == ELEMENT_NOT_FOUND) {
+                            newData[index * 2] = keyFromData;
                             newData[index * 2 + 1] = valueFromData;
                             break;
                         }
@@ -110,6 +115,9 @@ public final class LinearLongToLongHashtable implements LongToLongHashtable {
             keyFromData = data[index * 2];
             if (keyFromData == key) {
                 data[index * 2] = ELEMENT_NOT_FOUND;
+                return;
+            }
+            if (keyFromData == ELEMENT_NOT_FOUND) {
                 return;
             }
 
