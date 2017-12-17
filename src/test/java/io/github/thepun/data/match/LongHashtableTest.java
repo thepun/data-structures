@@ -24,16 +24,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static io.github.thepun.data.match.LongToLongHashtable.ELEMENT_NOT_FOUND;
+import static io.github.thepun.data.match.LongHashtable.ELEMENT_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
 import static org.junit.runners.Parameterized.Parameter;
 
 // TODO: move to junit5
 @RunWith(Parameterized.class)
-public class LongToLongHashtableTest {
+public class LongHashtableTest {
 
     @Parameter
-    public LongToLongHashtable hashtable;
+    public LongHashtable hashtable;
 
     @Test
     public void addElementAndGet() {
@@ -90,7 +90,7 @@ public class LongToLongHashtableTest {
     @Parameters
     public static Collection<Object[]> data() {
         List<Object[]> list = new ArrayList<>();
-        list.add(new Object[] {new LinearLongToLongHashtable()});
+        list.add(new Object[] {new LinearLongHashtable()});
         return list;
     }
 }

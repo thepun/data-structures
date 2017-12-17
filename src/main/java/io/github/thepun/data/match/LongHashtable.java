@@ -1,12 +1,9 @@
 package io.github.thepun.data.match;
 
-public interface LongToLongHashtable {
+public interface LongHashtable {
 
     long ELEMENT_NOT_FOUND = Long.MAX_VALUE;
 
-    //int capacity();
-
-    //int length();
 
     long get(long key);
 
